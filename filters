@@ -1,0 +1,20 @@
+#!/usr/bin/python2.7
+import requests
+from xml.etree.cElementTree import iterparse
+
+for event, elem in iterparse("./scan.xml"):
+     if elem.tag == "host":
+         addr = elem.getchildren()[0].get("addr")
+         port = elem.getchildren()[1].getchildren()[0].get("portid")
+         req = "http://" + addr + ":" + port
+         try:
+                r = requests.get(req, verify=False, timeout=10)
+         except requests.exceptions.ConnectionError, value:
+                print value
+         except requests.exceptions.ReadTimeout:
+                print "timeout"                
+
+         if r and r.status_code < 400:
+                 print(r.status_code)
+         
+         elem.clear() 
