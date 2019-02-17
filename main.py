@@ -9,16 +9,19 @@ http://109.241.165.147:8080/Docsis_system.asp
 
 import sys
 import requests
-from q import Queue
-from xml.etree.cElementTree import iterparse
 from bs4 import BeautifulSoup
+from worker import Queue
+from xml.etree.cElementTree import iterparse
+
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':ADH-AES128-SHA256'
 requests.packages.urllib3.disable_warnings() 
 
 PORT = ':8080'
 NB_ITER = 0
-MAX_ITER = 5
-NUM_THREADS = 20
+MAX_ITER = 20
+MAX_WORKERS = 5
+
+workers = Queue(MAX_WORKERS)
 
 def find_forms(page):
 	form = page.find('form')
@@ -44,27 +47,28 @@ def get_from_addr(addr):
 	return r
 
 def analyse(addr):
-	global NB_ITER
-	NB_ITER = NB_ITER + 1
-
 	res = get_from_addr(addr)
 	if res:
 		print ('Got response: %d from %s', res.status_code, addr)
 		page = BeautifulSoup(res.text, 'html.parser')
 		find_forms(page)
-	if NB_ITER > MAX_ITER:
-		exit()
 
 def parse_xml(elem):
 	if elem.tag == 'host':
+		global NB_ITER
+		NB_ITER = NB_ITER + 1
 		addr = elem.getchildren()[0].get('addr')
-		qpush(addr)
+		workers.push(addr)
+	if NB_ITER > MAX_ITER:
+		workers.join()
+		workers.stop()
+		exit()
 
 def loop(file):
 	[parse_xml(elem) for event, elem in iterparse(file)]
 
 def main(file):
-	queue = Queue()
+	loop(file)
 	#loop(file)
 
 if __name__ == '__main__':
