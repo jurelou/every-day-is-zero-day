@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.5
+# -*- coding: utf-8 -*-
 
 """
 
@@ -12,6 +13,7 @@ import time
 import signal
 from worker import Queue
 from xml.etree.cElementTree import iterparse
+import masscan2
 
 NB_ITER = 0
 MAX_ITER = 300
@@ -56,10 +58,14 @@ def single_test(file, addr, plugin):
 	workers.stop()
 
 if __name__ == '__main__':
-
+	mas = masscan2.PortScanner()
+	mas.scan('51.38.179.48', ports='22')
+	print (mas.scan_result)
+	'''
 	if len(sys.argv) is 2:
 		main("scan.xml", sys.argv[1])
 	elif len(sys.argv) is 3:
 		single_test("scan.xml", sys.argv[2], sys.argv[1])
 	else:
 		main("scan.xml")
+	'''

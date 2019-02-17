@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.5
+# -*- coding: utf-8 -*-
 
 """
 *---------------*
@@ -21,7 +22,8 @@ from bs4 import BeautifulSoup
 keywords = ['log',
 			'user',
 			'usr',
-			'pass']
+			'pass',
+			'pw']
 
 def check_if_login_form(input):
 	if input.has_attr('type') and input['type'] == 'password':
@@ -35,6 +37,8 @@ def check_if_login_form(input):
 def find_forms(page):
 	fields = {}
 	for form in page.findAll('form'):
+		if not form.has_attr('action'):
+			continue
 		action = form['action']
 		is_login_form = False
 		for input in form.find_all('input'):
@@ -67,6 +71,7 @@ def find_forms(page):
 				continue
 		if is_login_form:
 			return action, fields
+	return None, None
 
 class Plugin(IPlugin):
 	def __init__(self):
@@ -78,4 +83,6 @@ class Plugin(IPlugin):
 	def exec(self, res):
 		print ('-->',res.url)
 		page = BeautifulSoup(res.text, 'html.parser')
-		action, fields = find_forms(page)
+		if page:
+			action, fields = find_forms(page)
+			print (action, fields)

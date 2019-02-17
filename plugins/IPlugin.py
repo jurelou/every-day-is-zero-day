@@ -15,7 +15,6 @@ class IPlugin():
 
 	# This function will be used in the future to add additional configuration 
 	#
-	# @param {res} Requests object
 	# @return {None} Returns from this function is silenced
 	def config(self):
 		pass
