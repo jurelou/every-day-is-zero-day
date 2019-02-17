@@ -17,24 +17,30 @@ class Worker(threading.Thread):
 		self.shutdown_flag = threading.Event()
 		self.q = queue
 
+	def send_requests(self, addr):
+		res = None
+		try:
+			res = requests.get('http://' + addr + ':' + PLUGIN.port + PLUGIN.relative_url, \
+				allow_redirects=PLUGIN.allow_redirects, \
+				timeout=PLUGIN.timeout, \
+				verify=PLUGIN.verify_ssl)
+		except requests.exceptions.SSLError: print ('SSLError from {}'.format(addr))
+		except requests.exceptions.ReadTimeout: print ('timeout from {}'.format(addr))
+		except Exception as e: print ('Error {} -> {}'.format(addr, e))
+		finally:
+			return res
+
+		pass
 	def run(self):
-		print('Thread @%s started' % self.ident)
+		print('Starting new thread')
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
 			if addr is QUIT:
 				break
-			try:
-				res = requests.get('http://' + addr + ':' + PLUGIN.port, \
-					allow_redirects=PLUGIN.allow_redirects, \
-					timeout=PLUGIN.timeout, \
-					verify=PLUGIN.verify_ssl)
+			res = self.send_requests(addr)
+			if res:
 				PLUGIN.exec(res)
-			except requests.exceptions.SSLError: print ('SSLError from {}'.format(addr))
-			except requests.exceptions.ReadTimeout: print ('timeout from {}'.format(addr))
-			except Exception as e: print ('Error {} -> {}'.format(addr, e))
-			finally:
-				self.q.task_done()
-		#print('Thread @%s stopped' % self.ident)
+			self.q.task_done()
 
 def load_plugin(module):
     module_path = 'plugins.' + module
