@@ -1,9 +1,13 @@
 #!/usr/bin/env python3.5
 
 import sys
-import queue
-import threading
 import time
+import queue
+import urllib3
+import requests
+import threading
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':ADH-AES128-SHA256'
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 QUIT = 0xDEADBEEF
 
@@ -16,13 +20,21 @@ class Worker(threading.Thread):
 	def run(self):
 		print('Thread @%s started' % self.ident)
 		while not self.shutdown_flag.is_set():
-			item = self.q.get()
-			if item is QUIT:
+			addr = self.q.get()
+			if addr is QUIT:
 				break
-			print("Working on", item)
-			self.q.task_done()
-			PLUGIN.exec(1)
-		print('Thread @%s stopped' % self.ident)
+			try:
+				res = requests.get('http://' + addr + ':' + PLUGIN.port, \
+					allow_redirects=PLUGIN.allow_redirects, \
+					timeout=PLUGIN.timeout, \
+					verify=PLUGIN.verify_ssl)
+				PLUGIN.exec(res)
+			except requests.exceptions.SSLError: print ('SSLError from {}'.format(addr))
+			except requests.exceptions.ReadTimeout: print ('timeout from {}'.format(addr))
+			except Exception as e: print ('Error {} -> {}'.format(addr, e))
+			finally:
+				self.q.task_done()
+		#print('Thread @%s stopped' % self.ident)
 
 def load_plugin(module):
     module_path = 'plugins.' + module
@@ -31,16 +43,17 @@ def load_plugin(module):
     return __import__(module_path, fromlist=[module])
 
 class Queue():
-	def __init__(self, max_workers):
-		self.max_workers = max_workers
+	def __init__(self):
+		self.max_workers = None
 		self.q = queue.Queue()
 		self.threads = []
 
 	def init(self, plugin):
 		mod = load_plugin(plugin)
-		global PLUGIN 
+		global PLUGIN
 		PLUGIN = mod.Plugin()
 		PLUGIN.config()
+		self.max_workers = PLUGIN.max_workers if PLUGIN.max_workers else 5
 		for i in range(self.max_workers):
 			t = Worker(self.q)
 			t.start()
