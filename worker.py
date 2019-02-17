@@ -2,16 +2,23 @@
 
 import queue
 import threading
+import time
 
-QUIT = 0xD3ADB33F
-
-class Thread(threading.Thread):
-	def __init__(self):
+class Worker(threading.Thread): 
+	def __init__(self, queue):
 		threading.Thread.__init__(self)
-		self.shutdown_flag = threading.Event()			
+		self.shutdown_flag = threading.Event()
+		self.q = queue
 
-	def run():
-		pass
+	def run(self):
+		print('Thread @%s started' % self.ident)
+ 
+		while not self.shutdown_flag.is_set():
+			item = self.q.get()
+			print("Working on", item)
+			self.q.task_done()
+		print('Thread @%s stopped' % self.ident)
+ 
 
 class Queue():
 	def __init__(self, max_workers):
@@ -19,30 +26,18 @@ class Queue():
 		self.q = queue.Queue()
 		self.threads = []
 		for i in range(max_workers):
-			t = threading.Thread(target=self.job)
+			t = Worker(self.q)
 			t.start()
 			self.threads.append(t)
-    	#self.q = queue.Queue()
+
 	def push(self, data):
 		self.q.put(data)
 
-	def join(self):
-		self.q.join()
-
-	def job(self):
-		while True:
-			item = self.q.get()
-			if item is QUIT:
-				print ("QUIT thread")
-				break
-			print("Working on", item)
-			self.q.task_done()	
-
 	def stop(self):
-		for i in range(self.max_workers):
-			self.q.put(QUIT)
 		for t in self.threads:
-			t.join()
+			t.shutdown_flag.set()
+		for w in self.threads:
+			w.join()
 
 if __name__ == '__main__':
 	pass

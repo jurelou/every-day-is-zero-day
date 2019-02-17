@@ -8,6 +8,8 @@ http://109.241.165.147:8080/Docsis_system.asp
 """
 
 import sys
+import signal
+import time
 import requests
 from bs4 import BeautifulSoup
 from worker import Queue
@@ -18,10 +20,17 @@ requests.packages.urllib3.disable_warnings()
 
 PORT = ':8080'
 NB_ITER = 0
-MAX_ITER = 20
-MAX_WORKERS = 5
+MAX_ITER = 300
+MAX_WORKERS = 100
 
 workers = Queue(MAX_WORKERS)
+
+class ServiceExit(Exception):
+	pass
+
+def service_shutdown(signum, frame):
+    print('Caught signal %d' % signum)
+    raise ServiceExit
 
 def find_forms(page):
 	form = page.find('form')
@@ -58,18 +67,20 @@ def parse_xml(elem):
 		global NB_ITER
 		NB_ITER = NB_ITER + 1
 		addr = elem.getchildren()[0].get('addr')
-		workers.push(addr)
-	if NB_ITER > MAX_ITER:
-		workers.join()
-		workers.stop()
-		exit()
-
+		workers.push(addr)	
+	
 def loop(file):
 	[parse_xml(elem) for event, elem in iterparse(file)]
 
 def main(file):
-	loop(file)
-	#loop(file)
+	signal.signal(signal.SIGTERM, service_shutdown)
+	signal.signal(signal.SIGINT, service_shutdown)
+	try:
+		loop(file)
+		while True:
+			time.sleep(0.5)
+	except ServiceExit:
+		workers.stop()
 
 if __name__ == '__main__':
 	if len(sys.argv) is 2:
