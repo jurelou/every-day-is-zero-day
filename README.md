@@ -1,1 +1,3 @@
-install zmap: https://github.com/zmap/zmap/blob/master/INSTALL.md
+
+git clone https://github.com/jurelou/ips.git --recurse-submodules
+cd ips && chmod +x ./setup.sh && ./setup.sh
