@@ -8,6 +8,7 @@ http://109.241.165.147:8080/Docsis_system.asp
 
 """
 
+import os
 import sys
 import time
 import signal
@@ -39,7 +40,7 @@ def loop(file):
 	except Exception as e: print ('XML Error {}'.format(e))		
 
 def run_zmap(command):
-	process = Popen(command, stdout=PIPE, shell=True)
+	process = Popen(command, stdout=PIPE, shell=True, preexec_fn=os.setsid)
 	while True:
 		line = process.stdout.readline().rstrip()
 		if not line:
@@ -55,17 +56,16 @@ def main(file, plugin_name='livebox-20377'):
 	plugin.config()
 
 	workers.init(plugin)
-	for path in run_zmap("masscan 0.0.0.0/0 -p80 --excludefile ./blacklist.txt --max-rate 150000 --open-only"):
-		pass
-		#print (path)
-	exit()
 	try:
-		loop(file)
+		for path in run_zmap("./masscan/bin/masscan 0.0.0.0/0 -p80 --excludefile ./blacklist.txt --max-rate 150000 --open-only"):
+			print (path)
+			#loop(file)
 		while True:
 			time.sleep(0.5)
 	except ServiceExit:
 		print("Service exit")
 		workers.stop()
+		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
 def single_test(file, addr, plugin_name):
 	signal.signal(signal.SIGTERM, service_shutdown)
@@ -78,6 +78,7 @@ def single_test(file, addr, plugin_name):
 	workers.init(plugin)
 	workers.push(addr)
 	workers.stop()
+	#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
 def load_plugin(module):
 	module_path = 'plugins.' + module
@@ -86,8 +87,8 @@ def load_plugin(module):
 	return __import__(module_path, fromlist=[module])
 
 if __name__ == '__main__':
-	#for path in run_zmap("nc -l 4242"):
-	#	print (path)
+	if os.geteuid() != 0:
+		os.execvp("sudo", ["sudo"] + sys.argv)	
 	if len(sys.argv) is 2:
 		main("scan.xml", sys.argv[1])
 	elif len(sys.argv) is 3:
