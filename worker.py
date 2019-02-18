@@ -43,12 +43,6 @@ class Worker(threading.Thread):
 				PLUGIN.exec(res)
 			self.q.task_done()
 
-def load_plugin(module):
-    module_path = 'plugins.' + module
-    if module_path in sys.modules:
-        return sys.modules[module_path]
-    return __import__(module_path, fromlist=[module])
-
 class Queue():
 	def __init__(self):
 		self.max_workers = None
@@ -56,10 +50,8 @@ class Queue():
 		self.threads = []
 
 	def init(self, plugin):
-		mod = load_plugin(plugin)
 		global PLUGIN
-		PLUGIN = mod.Plugin()
-		PLUGIN.config()
+		PLUGIN = plugin
 		self.max_workers = PLUGIN.max_workers if PLUGIN.max_workers else 5
 		for i in range(self.max_workers):
 			t = Worker(self.q)

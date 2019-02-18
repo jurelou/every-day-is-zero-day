@@ -11,9 +11,9 @@ http://109.241.165.147:8080/Docsis_system.asp
 import sys
 import time
 import signal
+from subprocess import Popen, PIPE
 from worker import Queue
 from xml.etree.cElementTree import iterparse
-import masscan2
 
 NB_ITER = 0
 MAX_ITER = 300
@@ -38,10 +38,27 @@ def loop(file):
 		[parse_xml(elem) for event, elem in iterparse(file)]
 	except Exception as e: print ('XML Error {}'.format(e))		
 
-def main(file, plugin='livebox-20377'):
+def run_zmap(command):
+	process = Popen(command, stdout=PIPE, shell=True)
+	while True:
+		line = process.stdout.readline().rstrip()
+		if not line:
+			break
+		yield line
+
+def main(file, plugin_name='livebox-20377'):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
+
+	mod = load_plugin(plugin_name)
+	plugin = mod.Plugin()
+	plugin.config()
+
 	workers.init(plugin)
+	for path in run_zmap("masscan 0.0.0.0/0 -p80 --excludefile ./blacklist.txt --max-rate 150000 --open-only"):
+		pass
+		#print (path)
+	exit()
 	try:
 		loop(file)
 		while True:
@@ -50,22 +67,30 @@ def main(file, plugin='livebox-20377'):
 		print("Service exit")
 		workers.stop()
 
-def single_test(file, addr, plugin):
+def single_test(file, addr, plugin_name):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
+
+	mod = load_plugin(plugin_name)
+	plugin = mod.Plugin()
+	plugin.config()
+
 	workers.init(plugin)
 	workers.push(addr)
 	workers.stop()
 
+def load_plugin(module):
+	module_path = 'plugins.' + module
+	if module_path in sys.modules:
+		return sys.modules[module_path]
+	return __import__(module_path, fromlist=[module])
+
 if __name__ == '__main__':
-	mas = masscan2.PortScanner()
-	mas.scan('51.38.179.48', ports='22')
-	print (mas.scan_result)
-	'''
+	#for path in run_zmap("nc -l 4242"):
+	#	print (path)
 	if len(sys.argv) is 2:
 		main("scan.xml", sys.argv[1])
 	elif len(sys.argv) is 3:
 		single_test("scan.xml", sys.argv[2], sys.argv[1])
 	else:
 		main("scan.xml")
-	'''
