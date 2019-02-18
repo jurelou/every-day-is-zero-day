@@ -4,11 +4,8 @@
 import sys
 import time
 import queue
-import urllib3
 import requests
 import threading
-requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':ADH-AES128-SHA256'
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 QUIT = 0xDEADBEEF
 
@@ -20,24 +17,42 @@ class Worker(threading.Thread):
 
 	def send_requests(self, addr):
 		res = None
+		'''
+		print ("Forge url: ", url)
 		try:
-			res = requests.get('http://' + addr + ':' + PLUGIN.port + PLUGIN.relative_url, \
-				allow_redirects=PLUGIN.allow_redirects, \
-				timeout=PLUGIN.timeout, \
-				verify=PLUGIN.verify_ssl)
+			res = requests.get(url)
+			print (res)
+		except Exception as e: print ('Error {} -> {}'.format(addr, e))
+		finally:
+			return None
+
+		'''
+		try:
+			url = 'http://' + addr + ':' + PLUGIN.port + PLUGIN.relative_url
+			print ("Requesting", url)
+			res = requests.get(url, allow_redirects=True, \
+				verify=False, timeout=10)
+			print ("->>>>", res)
+			sys.stdout.flush()
 		except requests.exceptions.SSLError: print ('SSLError from {}'.format(addr))
 		except requests.exceptions.ReadTimeout: print ('timeout from {}'.format(addr))
 		except Exception as e: print ('Error {} -> {}'.format(addr, e))
 		finally:
 			return res
-
-		pass
 	def run(self):
 		print('Starting new thread')
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
 			if addr is QUIT:
 				break
+			print("GOT ", addr)
+			'''
+			print("Sending request")
+			with urllib.request.urlopen('http://www.python.org/') as f:
+				print(f.read(100))
+			sys.stdout.flush			
+			'''
+
 			res = self.send_requests(addr)
 			if res:
 				PLUGIN.exec(res)

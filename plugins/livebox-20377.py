@@ -53,7 +53,8 @@ def find_forms(page):
 				value = ''
 				if input.has_attr('value'):
 					value = input['value']
-				fields[input['name']] = value
+				if input.has_attr('name'):
+					fields[input['name']] = value
 				continue
 
 			# checkboxes and ratios
@@ -76,6 +77,8 @@ def find_forms(page):
 class Plugin(IPlugin):
 	def __init__(self):
 		super().__init__()
+		self.max_workers = 1
+		self.timeout = 10
 
 	def config(self):
 		pass
@@ -84,5 +87,6 @@ class Plugin(IPlugin):
 		print ('-->',res.url)
 		page = BeautifulSoup(res.text, 'html.parser')
 		if page:
+			print ("PAGE=>", page)
 			action, fields = find_forms(page)
 			print (action, fields)
