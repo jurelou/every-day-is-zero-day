@@ -1,3 +1,7 @@
+# Install
 
-git clone https://github.com/jurelou/ips.git --recurse-submodules
-cd ips && chmod +x ./setup.sh && ./setup.sh
+On Debian/Ubuntu:
+
+	$ git clone https://github.com/jurelou/every-day-is-zero-day.git --recurse-submodules
+	$ cd every-day-is-zero-day
+	$ ./setup.sh
