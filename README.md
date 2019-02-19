@@ -1,3 +1,5 @@
+# Requirements
+*	python3.5
 # Install
 
 On Debian/Ubuntu:
