@@ -45,10 +45,9 @@ def run_zmap(command):
 			break
 		yield line
 
-def main(file, plugin_name='livebox-20377'):
+def main(plugin_name='livebox-20377'):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
-
 	mod = load_plugin(plugin_name)
 	plugin = mod.Plugin()
 	plugin.config()
@@ -66,7 +65,7 @@ def main(file, plugin_name='livebox-20377'):
 		workers.stop()
 		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
-def single_test(file, addr, plugin_name):
+def single_test(addr, plugin_name):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
 	mod = load_plugin(plugin_name)
@@ -89,8 +88,8 @@ if __name__ == '__main__':
 	if os.geteuid() != 0:
 		os.execvp("sudo", ["sudo"] + sys.argv)	
 	if len(sys.argv) is 2:
-		main("scan.xml", sys.argv[1])
+		main(sys.argv[1])
 	elif len(sys.argv) is 3:
-		single_test("scan.xml", sys.argv[2], sys.argv[1])
+		single_test(sys.argv[2], sys.argv[1])
 	else:
-		main("scan.xml")
+		main()
