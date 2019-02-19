@@ -20,4 +20,4 @@ Run with a custom plugin
 
 Run with a custom plugin on a single IP
 
-	$ ./main.py <ip_address> <plugin_name>
+	$ ./main.py <plugin_name> <ip_address>
