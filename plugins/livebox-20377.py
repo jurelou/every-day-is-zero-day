@@ -91,7 +91,7 @@ class Plugin(IPlugin):
 	def __init__(self):
 		super().__init__()
 		self.port = 8080
-		self.relative_url = 
+		self.relative_url = "/get_getnetworkconf.cgi"
 
 	def config(self):
 		pass
