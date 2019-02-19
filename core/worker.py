@@ -21,26 +21,25 @@ class Worker(threading.Thread):
 		res = None
 		try:
 			url = 'http://{}:{}{}'.format(addr, PLUGIN.port, PLUGIN.relative_url)
+			log.debug("Sending GET to {}".format(url))
 			res = requests.get(url, allow_redirects=True, \
 				verify=False, timeout=10)
-			log.info("Got Response {} from {}".format(res.status_code, addr))
-		except requests.exceptions.SSLError: log.err('SSLError from {}'.format(addr))
-		except requests.exceptions.ReadTimeout: log.err('timeout from {}'.format(addr))
-		except Exception as e: log.err('Error {} -> {}'.format(addr, e))
+			log.debug("Got Response {} from GET {}".format(res.status_code, addr))
+		except requests.exceptions.SSLError: log.debug('SSLError from {}'.format(addr))
+		except requests.exceptions.ReadTimeout: log.debug('timeout from {}'.format(addr))
+		except Exception as e: log.debug('Error {} -> {}'.format(addr, e))
 		finally:
 			return res
 	def run(self):
-		log.info("Starting new thread")
+		log.debug("Starting new thread")
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
 			if addr is QUIT:
-				log.info("Thread is stopping")
+				log.debug("Thread is stopping")
 				break
-			log.info("Thread new job {}".format(addr))
 			res = self.send_requests(addr)
 			if res:
 				PLUGIN.exec(res)
-			log.info("Thread job finished {}".format(addr))
 			self.q.task_done()
 
 class Queue():

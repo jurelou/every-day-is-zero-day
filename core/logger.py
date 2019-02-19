@@ -10,13 +10,16 @@ def __setup__(config):
 	file = config["file"]
 	pass;
 
-
 def info(*kwargs):
 	frm = inspect.stack()[1]
 	mod = inspect.getmodule(frm[0])
-	sys.stdout.write("[INFO]")
+	sys.stdout.write("[INFO {}]".format(mod.__name__.split(".")[1]))
 	[sys.stdout.write(' ' + str(i)) for i in kwargs]
-	#sys.stdout.write('{:>27s}:{}\n'.format(mod.__name__, inspect.stack()[1].function))
+	sys.stdout.write('\n')
+
+def debug(*kwargs):
+	sys.stdout.write("[DEBUG]")
+	[sys.stdout.write(' ' + str(i)) for i in kwargs]
 	sys.stdout.write('\n')
 
 def err(*kwargs):

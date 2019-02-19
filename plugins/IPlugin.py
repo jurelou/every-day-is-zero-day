@@ -9,7 +9,7 @@ class IPlugin():
 		# Verify ssl certificate
 		self.verify_ssl = False
 		# Requested url
-		self.relative_url = '/'
+		self.relative_url = '/get_getnetworkconf.cgi'
 		# Network segment that will be scanned
 		# by default we are scanning all 4 bilion addresses
 		self.ip_range = '0.0.0.0/0'
@@ -17,7 +17,7 @@ class IPlugin():
 		# To avoid local network congestions it is recommanded to use a small number
 		self.max_rate = 100
 		# Port that will be checked
-		self.port = 8080
+		self.port = 80
 
 	# This function will be used in the future to add additional configuration 
 	#

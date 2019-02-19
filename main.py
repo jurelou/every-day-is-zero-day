@@ -23,19 +23,19 @@ class ServiceExit(Exception):
 	pass
 
 def service_shutdown(signum, frame):
-    log.info('Caught signal {}'.format(signum))
+    log.debug('Caught signal {}'.format(signum))
     raise ServiceExit
 
 def print_config(plugin, plugin_name):
-	log.info("######## Using the following config ########")
-	log.info("Plugin:\t\t{}".format(plugin_name))
-	log.info("Nb of workers:\t{}".format(plugin.max_workers))
-	log.info("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
-	log.info("Transmit rate:\t{}".format(plugin.max_rate))
-	log.info("Relative urls:\t{}".format(plugin.relative_url))
-	log.info("Allow redirects:\t{}".format(plugin.allow_redirects))
-	log.info("Verify ssl:\t{}".format(plugin.verify_ssl))
-	log.info("#############################################")
+	log.debug("######## Using the following config ########")
+	log.debug("Plugin:\t\t{}".format(plugin_name))
+	log.debug("Nb of workers:\t{}".format(plugin.max_workers))
+	log.debug("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
+	log.debug("Transmit rate:\t{}".format(plugin.max_rate))
+	log.debug("Relative urls:\t{}".format(plugin.relative_url))
+	log.debug("Allow redirects:\t{}".format(plugin.allow_redirects))
+	log.debug("Verify ssl:\t{}".format(plugin.verify_ssl))
+	log.debug("#############################################")
 
 def run_zmap(command):
 	process = Popen(command, stdout=PIPE, shell=True, preexec_fn=os.setsid)
@@ -56,7 +56,7 @@ def main(plugin_name='livebox-20377'):
 	command = "./masscan/bin/masscan {} -p{} --excludefile ./blacklist.txt --max-rate {}".format(plugin.ip_range, plugin.port, plugin.max_rate)
 	try:
 		for path in run_zmap(command):
-			log.info("Pushing {}".format(path.decode("utf-8")))
+			log.debug("Pushing {}".format(path.decode("utf-8")))
 			workers.push(path.decode("utf-8"))
 		while True:
 			time.sleep(1)
@@ -73,7 +73,7 @@ def single_test(addr, plugin_name):
 	plugin.config()
 	print_config(plugin, plugin_name)
 	workers.init(plugin)
-	log.info("Running single test to {} with plugin {}".format(addr, plugin_name))
+	log.debug("Running single test to {} with plugin {}".format(addr, plugin_name))
 	workers.push(addr)
 	#workers.stop()
 	#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
