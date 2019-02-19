@@ -6,8 +6,10 @@ import time
 import queue
 import requests
 import threading
+import core.logger as log
 
 QUIT = 0xDEADBEEF
+
 
 class Worker(threading.Thread): 
 	def __init__(self, queue):
@@ -17,45 +19,28 @@ class Worker(threading.Thread):
 
 	def send_requests(self, addr):
 		res = None
-		'''
-		print ("Forge url: ", url)
 		try:
-			res = requests.get(url)
-			print (res)
-		except Exception as e: print ('Error {} -> {}'.format(addr, e))
-		finally:
-			return None
-
-		'''
-		try:
-			url = 'http://' + addr + ':' + PLUGIN.port + PLUGIN.relative_url
-			print ("Requesting", url)
+			url = 'http://{}:{}{}'.format(addr, PLUGIN.port, PLUGIN.relative_url)
 			res = requests.get(url, allow_redirects=True, \
 				verify=False, timeout=10)
-			print ("->>>>", res)
-			sys.stdout.flush()
-		except requests.exceptions.SSLError: print ('SSLError from {}'.format(addr))
-		except requests.exceptions.ReadTimeout: print ('timeout from {}'.format(addr))
-		except Exception as e: print ('Error {} -> {}'.format(addr, e))
+			log.info("Got Response {} from {}".format(res.status_code, addr))
+		except requests.exceptions.SSLError: log.err('SSLError from {}'.format(addr))
+		except requests.exceptions.ReadTimeout: log.err('timeout from {}'.format(addr))
+		except Exception as e: log.err('Error {} -> {}'.format(addr, e))
 		finally:
 			return res
 	def run(self):
-		print('Starting new thread')
+		log.info("Starting new thread")
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
 			if addr is QUIT:
+				log.info("Thread is stopping")
 				break
-			print("GOT ", addr)
-			'''
-			print("Sending request")
-			with urllib.request.urlopen('http://www.python.org/') as f:
-				print(f.read(100))
-			sys.stdout.flush			
-			'''
-
+			log.info("Thread new job {}".format(addr))
 			res = self.send_requests(addr)
 			if res:
 				PLUGIN.exec(res)
+			log.info("Thread job finished {}".format(addr))
 			self.q.task_done()
 
 class Queue():

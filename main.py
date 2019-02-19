@@ -11,54 +11,33 @@ http://109.241.165.147:8080/Docsis_system.asp
 import os
 import sys
 import time
-import shlex
 import signal
-import urllib.request
-import urllib.parse
-
+import core.logger as log
+from core.worker import Queue
 from subprocess import Popen, PIPE
-from worker import Queue
 from xml.etree.cElementTree import iterparse
 
-NB_ITER = 0
-MAX_ITER = 300
 workers = Queue()
 
 class ServiceExit(Exception):
 	pass
 
 def service_shutdown(signum, frame):
-    print('Caught signal %d' % signum)
+    log.info('Caught signal {}'.format(signum))
     raise ServiceExit
 
-def parse_xml(elem):
-	if elem.tag == 'host':
-		global NB_ITER
-		NB_ITER = NB_ITER + 1
-		addr = elem.getchildren()[0].get('addr')
-		workers.push(addr)	
-
-def loop(file):
-	try:
-		[parse_xml(elem) for event, elem in iterparse(file)]
-	except Exception as e: print ('XML Error {}'.format(e))		
+def print_config(plugin, plugin_name):
+	log.info("######## Using the following config ########")
+	log.info("Plugin:\t\t{}".format(plugin_name))
+	log.info("Nb of workers:\t{}".format(plugin.max_workers))
+	log.info("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
+	log.info("Transmit rate:\t{}".format(plugin.max_rate))
+	log.info("Relative urls:\t{}".format(plugin.relative_url))
+	log.info("Allow redirects:\t{}".format(plugin.allow_redirects))
+	log.info("Verify ssl:\t{}".format(plugin.verify_ssl))
+	log.info("#############################################")
 
 def run_zmap(command):
-	'''
-	process = Popen(shlex.split(command), stdout=PIPE)
-	while True:
-		output = process.stdout.readline()
-		if output == '' and process.poll() is not None:
-			break
-		if output:
-			print (output.strip().decode("utf-8"))
-			workers.push('173.44.204.234')
-			sys.stdout.flush()
-	rc = process.poll()
-	return rc	
-	'''
-
-
 	process = Popen(command, stdout=PIPE, shell=True, preexec_fn=os.setsid)
 	while True:
 		line = process.stdout.readline().rstrip()
@@ -73,34 +52,29 @@ def main(file, plugin_name='livebox-20377'):
 	mod = load_plugin(plugin_name)
 	plugin = mod.Plugin()
 	plugin.config()
-
+	print_config(plugin, plugin_name)
 	workers.init(plugin)
+	command = "./masscan/bin/masscan {} -p{} --excludefile ./blacklist.txt --max-rate {}".format(plugin.ip_range, plugin.port, plugin.max_rate)
 	try:
-		print("lol")
-		'''
-		run_zmap("./masscan/bin/masscan 0.0.0.0/0 -p80 --excludefile ./blacklist.txt")
-		'''
-
-		for path in run_zmap("./masscan/bin/masscan 0.0.0.0/0 -p8080 --excludefile ./blacklist.txt --max-rate 150000"):
-			print("Pushing ",path.decode("utf-8"))
+		for path in run_zmap(command):
+			log.info("Pushing {}".format(path.decode("utf-8")))
 			workers.push(path.decode("utf-8"))
-
 		while True:
-			workers.push('173.44.204.234')
+			time.sleep(1)
 	except ServiceExit:
-		print("Service exit")
+		log.err("Service exit exception")
 		workers.stop()
 		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
 def single_test(file, addr, plugin_name):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
-
 	mod = load_plugin(plugin_name)
 	plugin = mod.Plugin()
 	plugin.config()
-
+	print_config(plugin, plugin_name)
 	workers.init(plugin)
+	log.info("Running single test to {} with plugin {}".format(addr, plugin_name))
 	workers.push(addr)
 	#workers.stop()
 	#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)

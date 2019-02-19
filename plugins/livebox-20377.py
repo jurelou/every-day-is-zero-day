@@ -15,8 +15,8 @@ livebox:
 *	http://70.40.245.92:8080/get_getnetworkconf.cgi
 
 """
+import core.logger as log
 from plugins.IPlugin import IPlugin
-
 from bs4 import BeautifulSoup
 
 keywords = ['log',
@@ -84,9 +84,7 @@ class Plugin(IPlugin):
 		pass
 
 	def exec(self, res):
-		print ('-->',res.url)
 		page = BeautifulSoup(res.text, 'html.parser')
 		if page:
-			print ("PAGE=>", page)
 			action, fields = find_forms(page)
-			print (action, fields)
+			log.info(action, fields)

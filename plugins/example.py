@@ -20,7 +20,7 @@ This is an example plugin implementation
 # @str	{port}				8080			#TODO: remove this
 
 """
-
+import core.logger as log
 from plugins.IPlugin import IPlugin
 
 class Plugin(IPlugin):
@@ -37,4 +37,5 @@ class Plugin(IPlugin):
 	# @param {res} Requests object
 	# @return {None} No returns expected
 	def exec(self, data):
+		log.info("Running my custom plugin")
 		pass
