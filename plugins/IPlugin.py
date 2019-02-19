@@ -1,7 +1,7 @@
 class IPlugin():
 	def __init__(self):
 		# Number of threads used by the scanner
-		self.max_workers = 2
+		self.max_workers = 5
 		# Timeout after a request should be dropped
 		self.timeout = 5
 		# Allow http redirects (3xx)

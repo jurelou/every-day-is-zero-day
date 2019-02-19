@@ -32,7 +32,8 @@ def check_if_login_form(input):
 		return True
 	if input.has_attr('name'):
 		for word in keywords:
-			if word in input['name']:
+			inpt = input['name'].lower()
+			if word in inpt:
 				return True
 	return False
 
@@ -45,10 +46,11 @@ def find_forms(page):
 			action = form['action']
 			is_login_form = False
 			for input in form.find_all('input'):
-				is_login_form = check_if_login_form(input)
-
+				if check_if_login_form(input):
+					is_login_form = True
 				# ignore submit/images with no name attributes
 				if input['type'] in ('submit', 'image') and not input.has_attr('name'):
+					print("FIRST")
 					continue
 
 				# single element vname/bvalue fields
@@ -59,36 +61,19 @@ def find_forms(page):
 					if input.has_attr('name'):
 						fields[input['name']] = value
 					continue
-
-				# checkboxes and ratios
-				if input['type'] in ('checkbox', 'radio'):
-					value = ''
-					if input.has_key('checked'):
-						if input.has_key('value'):
-							value = input['value']
-						else:
-							value = 'on'
-					'''
-					if fields.has_key(input['name']) and value:
-						fields[input['name']] = value
-					if not fields.has_key(input['name']):
-						fields[input['name']] = value
-					'''
-					continue
 			if is_login_form:
 				return action, fields
+
 	except Exception as e: log.err(e)
-	finally:
-		return None, None
+	print ("Return here")
+	return None, None
 
 def post_login(url, body):
-	log.info("Attempt to LOGIN to {} -> {}".format(url, body))
+	log.info("ATTEMPT to LOGIN to {} -> {}".format(url, body))
 	res = None
 	try:
 		res = requests.post(url, data = body)
-	except ConnectionError: log.err("Connexion error from ",url)
-	except HTTPError:  log.err("Connexion error from ",url)
-	except Exception as e: log.err('Error {} -> {}'.format(addr, e))
+	except Exception as e: log.err('Error POST to {} -> {}'.format(addr, e))
 	finally:
 		return res
 
@@ -97,16 +82,14 @@ class Plugin(IPlugin):
 		super().__init__()
 		self.port = 8080
 		self.relative_url = "/get_getnetworkconf.cgi"
-<<<<<<< HEAD
-		self.max_workers = 10
+		self.max_workers = 1
 		self.max_rate = 200
-=======
->>>>>>> 63df1304a74f6b8f4cbd12710be14a2fd3ce4634
 
 	def config(self):
 		pass
 
 	def exec(self, res):
+		log.info("Executing plugin for ", res.url)
 		page = BeautifulSoup(res.text, 'html.parser')
 		if page:
 			action, body = find_forms(page)
@@ -114,3 +97,7 @@ class Plugin(IPlugin):
 				log.info(action, body)
 				res = post_login('{}{}'.format(res.url, action), body)
 				log.info("Got response {} from LOGIN {}".format(res.status_code, res.url))
+			else:
+				log.info("No login form found from ", res.url)
+		else:
+			log.info("No DOM found from ", res.url)
