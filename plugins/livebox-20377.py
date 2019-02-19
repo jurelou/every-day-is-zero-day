@@ -97,8 +97,11 @@ class Plugin(IPlugin):
 		super().__init__()
 		self.port = 8080
 		self.relative_url = "/get_getnetworkconf.cgi"
+<<<<<<< HEAD
 		self.max_workers = 10
 		self.max_rate = 200
+=======
+>>>>>>> 63df1304a74f6b8f4cbd12710be14a2fd3ce4634
 
 	def config(self):
 		pass
