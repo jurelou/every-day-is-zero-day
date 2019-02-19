@@ -38,43 +38,48 @@ def check_if_login_form(input):
 
 def find_forms(page):
 	fields = {}
-	for form in page.findAll('form'):
-		if not form.has_attr('action'):
-			continue
-		action = form['action']
-		is_login_form = False
-		for input in form.find_all('input'):
-			is_login_form = check_if_login_form(input)
-
-			# ignore submit/images with no name attributes
-			if input['type'] in ('submit', 'image') and not input.has_attr('name'):
+	try:
+		for form in page.findAll('form'):
+			if not form.has_attr('action'):
 				continue
+			action = form['action']
+			is_login_form = False
+			for input in form.find_all('input'):
+				is_login_form = check_if_login_form(input)
 
-			# single element vname/bvalue fields
-			if input['type'] in ('text', 'hidden', 'password', 'submit', 'image'):
-				value = ''
-				if input.has_attr('value'):
-					value = input['value']
-				if input.has_attr('name'):
-					fields[input['name']] = value
-				continue
+				# ignore submit/images with no name attributes
+				if input['type'] in ('submit', 'image') and not input.has_attr('name'):
+					continue
 
-			# checkboxes and ratios
-			if input['type'] in ('checkbox', 'radio'):
-				value = ''
-				if input.has_key('checked'):
-					if input.has_key('value'):
+				# single element vname/bvalue fields
+				if input['type'] in ('text', 'hidden', 'password', 'submit', 'image'):
+					value = ''
+					if input.has_attr('value'):
 						value = input['value']
-					else:
-						value = 'on'
-				if fields.has_key(input['name']) and value:
-					fields[input['name']] = value
-				if not fields.has_key(input['name']):
-					fields[input['name']] = value
-				continue
-		if is_login_form:
-			return action, fields
-	return None, None
+					if input.has_attr('name'):
+						fields[input['name']] = value
+					continue
+
+				# checkboxes and ratios
+				if input['type'] in ('checkbox', 'radio'):
+					value = ''
+					if input.has_key('checked'):
+						if input.has_key('value'):
+							value = input['value']
+						else:
+							value = 'on'
+					'''
+					if fields.has_key(input['name']) and value:
+						fields[input['name']] = value
+					if not fields.has_key(input['name']):
+						fields[input['name']] = value
+					'''
+					continue
+			if is_login_form:
+				return action, fields
+	except Exception as e: log.err(e)
+	finally:
+		return None, None
 
 def post_login(url, body):
 	log.info("Attempt to LOGIN to {} -> {}".format(url, body))
@@ -91,7 +96,9 @@ class Plugin(IPlugin):
 	def __init__(self):
 		super().__init__()
 		self.port = 8080
-		self.relative_url = 
+		self.relative_url = "/get_getnetworkconf.cgi"
+		self.max_workers = 10
+		self.max_rate = 200
 
 	def config(self):
 		pass
