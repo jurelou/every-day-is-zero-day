@@ -1,3 +1,4 @@
 #!/bin/sh
-pip install requirements.txt || pip3 install requirements.txt
+pip3 install requirements.txt
+chmod +x ./main.py
 cd masscan && make -j4
