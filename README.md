@@ -14,13 +14,14 @@ Run with default parameters
 
 	$ ./main.py
 
-Run with a custom plugin
+Run with a custom plugin 
 	
-	$ ./main.py <plugin_name>
+	$ ./main.py --plugin <PLUGIN_NAME>
 
-Run with a custom plugin on a single IP
+Run with a custom plugin  on a single IP
 
-	$ ./main.py <plugin_name> <ip_address>
+	$ ./main.py -p <PLUGIN_NAME> -d <IP>
+
 
 # Create new plugin
 
@@ -28,3 +29,10 @@ Adding a custom module is as simple as the following !!
 
 	$ chmod+x ./scripts/new_plugin.sh && ./scripts/new_plugin.sh my_super_module
 	$ ./main.py my_super_module
+
+# Verbosity levels
+| console option | verbosity value | |
+|---|---|---|
+| (none) | INFO |  show only found vulnerabilities |
+| -v | ERR | Show errors |
+| -vv | DEBUG | Show debug message (very noisy) |
