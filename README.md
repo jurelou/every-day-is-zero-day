@@ -16,7 +16,7 @@ Run with default parameters
 
 Run with a custom plugin 
 	
-	$ ./main.py -p <PLUGIN_NAME>
+	$ ./main.py --plugin <PLUGIN_NAME>
 
 Run with a custom plugin  on a single IP
 
