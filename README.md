@@ -29,3 +29,10 @@ Adding a custom module is as simple as the following !!
 
 	$ chmod+x ./scripts/new_plugin.sh && ./scripts/new_plugin.sh my_super_module
 	$ ./main.py my_super_module
+
+# Verbosity levels
+| console option | verbosity value | |
+|---|---|---|
+| (none) | INFO |  show only found vulnerabilities |
+| -v | ERR | Show errors |
+| -vv | DEBUG | Show debug message (very noisy) |
