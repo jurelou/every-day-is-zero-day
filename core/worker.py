@@ -30,17 +30,20 @@ class Worker(threading.Thread):
 		except Exception as e: log.debug('Error {} -> {}'.format(addr, e))
 		finally:
 			return res
+		return None
+
 	def run(self):
 		log.debug("Starting new thread")
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
 			if addr is QUIT:
 				log.debug("Thread is stopping")
-				break
+				return
 			res = self.send_requests(addr)
 			if res:
 				PLUGIN.exec(res)
 			self.q.task_done()
+		log.critical("THREAD STOPPED, PROBABLY AN ERROR")
 
 class Queue():
 	def __init__(self):

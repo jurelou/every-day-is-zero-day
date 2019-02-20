@@ -19,6 +19,10 @@ class IPlugin():
 		# Port that will be checked
 		self.port = 80
 
+	def serverConf(self):
+		self.max_rate = 150000
+		self.max_workers = 50
+		pass
 	# This function will be used in the future to add additional configuration 
 	#
 	# @return {None} Returns from this function is silenced

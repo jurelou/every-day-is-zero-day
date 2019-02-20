@@ -15,6 +15,8 @@ livebox:
 *	http://89.129.126.167:8080/get_getnetworkconf.cgi
 *	http://70.40.245.92:8080/get_getnetworkconf.cgi
 
+http://85.56.33.38:8080/index.stm
+
 """
 import requests
 import core.logger as log
@@ -49,12 +51,11 @@ def find_forms(page):
 				if check_if_login_form(input):
 					is_login_form = True
 				# ignore submit/images with no name attributes
-				if input['type'] in ('submit', 'image') and not input.has_attr('name'):
-					print("FIRST")
+				if input.has_attr('type') and input['type'] in ('submit', 'image') and not input.has_attr('name'):
 					continue
 
 				# single element vname/bvalue fields
-				if input['type'] in ('text', 'hidden', 'password', 'submit', 'image'):
+				if input.has_attr('type') and input['type'] in ('text', 'hidden', 'password', 'submit', 'image'):
 					value = ''
 					if input.has_attr('value'):
 						value = input['value']
@@ -64,8 +65,7 @@ def find_forms(page):
 			if is_login_form:
 				return action, fields
 
-	except Exception as e: log.err(e)
-	print ("Return here")
+	except Exception as e: log.critical("Plugin:", e)
 	return None, None
 
 def post_login(url, body):
@@ -94,9 +94,9 @@ class Plugin(IPlugin):
 		if page:
 			action, body = find_forms(page)
 			if action and body:
-				log.info(action, body)
 				res = post_login('{}{}'.format(res.url, action), body)
-				log.info("Got response {} from LOGIN {}".format(res.status_code, res.url))
+				if res.status_code is 200 and res.url.endswith("/get_getnetworkconf.cgi/cgi-bin/login.exe"):
+					log.info("FOUND VULN: {}".format(res.url))  
 			else:
 				log.info("No login form found from ", res.url)
 		else:
