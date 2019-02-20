@@ -32,14 +32,26 @@ class Worker(threading.Thread):
 		finally:
 			return res
 		return None
+
 	def create_tcp_connection(self, addr):
-		print("CREATING TCP CONN for", addr)
-		return 123
+		addr = '51.38.179.48'
+		sock = socket.socket()
+		sock.settimeout(1)
+		try:
+			sock.connect((addr, PLUGIN.port))
+		except socket.timeout:
+			log.err("Socket timeout from {}:{}".format(addr, PLUGIN.port))
+			return None
+		except socket.error:
+			log.err("Socket connect error {}:{}".format(addr, PLUGIN.port))
+			return None
+		return sock
 
 	def run(self):
 		log.debug("Starting new thread")
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
+			print("n job")
 			if addr is QUIT:
 				log.debug("Thread stopping by QUIT")
 				return

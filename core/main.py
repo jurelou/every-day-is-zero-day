@@ -9,15 +9,14 @@ http://109.241.165.147:8080/Docsis_system.asp
 """
 
 import os
-import argparse
 import sys
 import time
 import signal
-from ipaddress import ip_address
+import argparse
 import core.logger as log
+from ipaddress import ip_address
 from core.worker import Queue
 from subprocess import Popen, PIPE
-from xml.etree.cElementTree import iterparse
 
 workers = Queue()
 

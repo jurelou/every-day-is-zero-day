@@ -29,7 +29,7 @@ def debug(*kwargs):
 		sys.stdout.write('\n')
 
 def err(*kwargs):
-	if v_level is 1:
+	if v_level >= 1:
 		frm = inspect.stack()[1]
 		mod = inspect.getmodule(frm[0])
 		sys.stdout.write("[ERROR]")
