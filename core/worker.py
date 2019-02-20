@@ -4,6 +4,7 @@
 import sys
 import time
 import queue
+import socket
 import requests
 import threading
 import core.logger as log
@@ -31,6 +32,9 @@ class Worker(threading.Thread):
 		finally:
 			return res
 		return None
+	def create_tcp_connection(self, addr):
+		print("CREATING TCP CONN for", addr)
+		return 123
 
 	def run(self):
 		log.debug("Starting new thread")
@@ -39,13 +43,11 @@ class Worker(threading.Thread):
 			if addr is QUIT:
 				log.debug("Thread stopping by QUIT")
 				return
-			print (PLUGIN.connection_type)
 			conn = None
 			if PLUGIN.connection_type == 1:
-				print("SENDING RAW")
+				conn = self.create_tcp_connection(addr)
 			elif PLUGIN.connection_type == 2:
 				conn = self.send_get_requests(addr)
-
 			if conn:
 				PLUGIN.exec(conn)
 			self.q.task_done()

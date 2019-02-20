@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-*---------------*
-|CVE-EXAMPLE    |
-*---------------*
-
-This is an example plugin implementation
+*----------------*
+|CVE-2018-15473  |
+*----------------*
+Sources:
+https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-15473
+https://security.netapp.com/advisory/ntap-20181101-0001/
+https://www.exploit-db.com/exploits/45233
+https://github.com/Rhynorater/CVE-2018-15473-Exploit
 
 """
 import core.logger as log
@@ -16,18 +19,11 @@ class Plugin(IPlugin):
 	def __init__(self):
 		super().__init__()
 		self.port = 22
-		self.max_workers = 1
 		self.connection_type = connection_type.RAW
 
-	# This function will be used in the future to add additional configuration
-	#
-	# @return {None} No returns expected
 	def config(self):
 		pass
-	# This function is called each time our scanned finds a valid host
-	#
-	# @param {res} Requests object
-	# @return {None} No returns expected
+
 	def exec(self, connection):
 		log.info("Running my custom plugin")
 		pass
