@@ -17,7 +17,7 @@ class Worker(threading.Thread):
 		self.shutdown_flag = threading.Event()
 		self.q = queue
 
-	def send_requests(self, addr):
+	def send_get_requests(self, addr):
 		res = None
 		try:
 			url = 'http://{}:{}{}'.format(addr, PLUGIN.port, PLUGIN.relative_url)
@@ -39,7 +39,16 @@ class Worker(threading.Thread):
 			if addr is QUIT:
 				log.debug("Thread stopping by QUIT")
 				return
-			res = self.send_requests(addr)
+			print (PLUGIN.connection_type)
+			if PLUGIN.connection_type == connection_type.WEB:
+				print("000")
+			elif PLUGIN.connection_type == 1:
+				print("111")
+			elif PLUGIN.connection_type == 2:
+				print("111333")
+			else:
+				print("ELSE")
+			res = self.send_get_requests(addr)
 			if res:
 				PLUGIN.exec(res)
 			self.q.task_done()

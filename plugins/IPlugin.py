@@ -1,6 +1,13 @@
+
+class connection_type():
+	NONE = 0
+	RAW = 1
+	WEB = 2
+
 class IPlugin():
 	def __init__(self):
 		# Number of threads used by the scanner
+		self.connection_type = connection_type.NONE
 		self.max_workers = 5
 		# Timeout after a request should be dropped
 		self.timeout = 5

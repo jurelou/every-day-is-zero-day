@@ -20,6 +20,7 @@ http://85.56.33.38:8080/index.stm
 """
 import requests
 import core.logger as log
+from plugins.IPlugin import connection_type
 from plugins.IPlugin import IPlugin
 from bs4 import BeautifulSoup
 
@@ -82,8 +83,7 @@ class Plugin(IPlugin):
 		super().__init__()
 		self.port = 8080
 		self.relative_url = "/get_getnetworkconf.cgi"
-		self.max_workers = 1
-		self.max_rate = 200
+		self.connection_type = connection_type.WEB
 
 	def config(self):
 		pass

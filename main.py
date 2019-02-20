@@ -31,6 +31,7 @@ def service_shutdown(signum, frame):
 def print_config(plugin, args):
 	log.all("######## Using the following config ########")
 	log.all("Plugin:\t\t{}".format(args.plugin))
+	log.all("Connection type:\t{}".format(plugin.connection_type))
 	log.all("Verbosity:\t{}".format(args.verbose))
 	log.all("Nb of workers:\t{}".format(plugin.max_workers))
 	log.all("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
