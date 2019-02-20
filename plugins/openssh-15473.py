@@ -10,7 +10,7 @@ This is an example plugin implementation
 
 """
 import core.logger as log
-from plugins.IPlugin import IPlugin
+from plugins.IPlugin import IPlugin, connection_type
 
 class Plugin(IPlugin):
 	def __init__(self):
@@ -28,6 +28,6 @@ class Plugin(IPlugin):
 	#
 	# @param {res} Requests object
 	# @return {None} No returns expected
-	def exec(self, data):
+	def exec(self, connection):
 		log.info("Running my custom plugin")
 		pass

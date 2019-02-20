@@ -20,8 +20,7 @@ http://85.56.33.38:8080/index.stm
 """
 import requests
 import core.logger as log
-from plugins.IPlugin import connection_type
-from plugins.IPlugin import IPlugin
+from plugins.IPlugin import IPlugin, connection_type
 from bs4 import BeautifulSoup
 
 keywords = ['log',

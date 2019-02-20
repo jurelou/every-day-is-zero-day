@@ -40,17 +40,14 @@ class Worker(threading.Thread):
 				log.debug("Thread stopping by QUIT")
 				return
 			print (PLUGIN.connection_type)
-			if PLUGIN.connection_type == connection_type.WEB:
-				print("000")
-			elif PLUGIN.connection_type == 1:
-				print("111")
+			conn = None
+			if PLUGIN.connection_type == 1:
+				print("SENDING RAW")
 			elif PLUGIN.connection_type == 2:
-				print("111333")
-			else:
-				print("ELSE")
-			res = self.send_get_requests(addr)
-			if res:
-				PLUGIN.exec(res)
+				conn = self.send_get_requests(addr)
+
+			if conn:
+				PLUGIN.exec(conn)
 			self.q.task_done()
 		log.critical("Thread stopping by SHUTDOWN_FLAG")
 
