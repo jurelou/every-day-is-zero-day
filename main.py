@@ -9,9 +9,11 @@ http://109.241.165.147:8080/Docsis_system.asp
 """
 
 import os
+import argparse
 import sys
 import time
 import signal
+from ipaddress import ip_address
 import core.logger as log
 from core.worker import Queue
 from subprocess import Popen, PIPE
@@ -45,38 +47,20 @@ def run_zmap(command):
 			break
 		yield line
 
-def main(plugin_name='livebox-20377'):
+def main(plugin):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
-	mod = load_plugin(plugin_name)
-	plugin = mod.Plugin()
-	plugin.config()
-	print_config(plugin, plugin_name)
-	workers.init(plugin)
 	command = "./masscan/bin/masscan {} -p{} --excludefile ./blacklist.txt --max-rate {}".format(plugin.ip_range, plugin.port, plugin.max_rate)
 	try:
 		for path in run_zmap(command):
 			log.debug("Pushing {}".format(path.decode("utf-8")))
 			workers.push(path.decode("utf-8"))
-		while True:
-			time.sleep(1)
+		log.critical("MAsscan stopped ..")
+		workers.stop()
 	except ServiceExit:
 		log.err("Service exit exception")
 		workers.stop()
 		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
-
-def single_test(addr, plugin_name):
-	signal.signal(signal.SIGTERM, service_shutdown)
-	signal.signal(signal.SIGINT, service_shutdown)
-	mod = load_plugin(plugin_name)
-	plugin = mod.Plugin()
-	plugin.config()
-	print_config(plugin, plugin_name)
-	workers.init(plugin)
-	log.debug("Running single test to {} with plugin {}".format(addr, plugin_name))
-	workers.push(addr)
-	#workers.stop()
-	#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
 def load_plugin(module):
 	module_path = 'plugins.' + module
@@ -84,12 +68,25 @@ def load_plugin(module):
 		return sys.modules[module_path]
 	return __import__(module_path, fromlist=[module])
 
+def entrypoint():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-s", "--server", help="run in production mode", action="store_true")
+	parser.add_argument("-d", "--dest", type=ip_address, help="Test with a given IP address")
+	parser.add_argument("-p", "--plugin", type=str, help="Use a specific plugin (default: livebox-20377)", default='livebox-20377')
+	args = parser.parse_args()
+
+	mod = load_plugin(args.plugin)
+	plugin = mod.Plugin()
+	plugin.config()
+	if args.server:
+		plugin.serverConf()
+	if args.dest:
+		plugin.ip_range = args.dest
+	print_config(plugin, args.plugin)
+	workers.init(plugin)
+	main(plugin)
+
 if __name__ == '__main__':
 	if os.geteuid() != 0:
 		os.execvp("sudo", ["sudo"] + sys.argv)	
-	if len(sys.argv) is 2:
-		main(sys.argv[1])
-	elif len(sys.argv) is 3:
-		single_test(sys.argv[2], sys.argv[1])
-	else:
-		main()
+	entrypoint()
