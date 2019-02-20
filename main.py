@@ -25,19 +25,20 @@ class ServiceExit(Exception):
 	pass
 
 def service_shutdown(signum, frame):
-    log.debug('Caught signal {}'.format(signum))
+    log.all('Caught signal {}'.format(signum))
     raise ServiceExit
 
-def print_config(plugin, plugin_name):
-	log.debug("######## Using the following config ########")
-	log.debug("Plugin:\t\t{}".format(plugin_name))
-	log.debug("Nb of workers:\t{}".format(plugin.max_workers))
-	log.debug("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
-	log.debug("Transmit rate:\t{}".format(plugin.max_rate))
-	log.debug("Relative urls:\t{}".format(plugin.relative_url))
-	log.debug("Allow redirects:\t{}".format(plugin.allow_redirects))
-	log.debug("Verify ssl:\t{}".format(plugin.verify_ssl))
-	log.debug("#############################################")
+def print_config(plugin, args):
+	log.all("######## Using the following config ########")
+	log.all("Plugin:\t\t{}".format(args.plugin))
+	log.all("Verbosity:\t{}".format(args.verbose))
+	log.all("Nb of workers:\t{}".format(plugin.max_workers))
+	log.all("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
+	log.all("Transmit rate:\t{}".format(plugin.max_rate))
+	log.all("Relative urls:\t{}".format(plugin.relative_url))
+	log.all("Allow redirects:\t{}".format(plugin.allow_redirects))
+	log.all("Verify ssl:\t{}".format(plugin.verify_ssl))
+	log.all("#############################################")
 
 def run_zmap(command):
 	process = Popen(command, stdout=PIPE, shell=True, preexec_fn=os.setsid)
@@ -55,10 +56,10 @@ def main(plugin):
 		for path in run_zmap(command):
 			log.debug("Pushing {}".format(path.decode("utf-8")))
 			workers.push(path.decode("utf-8"))
-		log.critical("MAsscan stopped ..")
+		log.all("MAsscan stopped ..")
 		workers.stop()
 	except ServiceExit:
-		log.err("Service exit exception")
+		log.all("Wait, program is quitting :) .......")
 		workers.stop()
 		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
@@ -73,6 +74,7 @@ def entrypoint():
 	parser.add_argument("-s", "--server", help="run in production mode", action="store_true")
 	parser.add_argument("-d", "--dest", type=ip_address, help="Test with a given IP address")
 	parser.add_argument("-p", "--plugin", type=str, help="Use a specific plugin (default: livebox-20377)", default='livebox-20377')
+	parser.add_argument('-v', '--verbose', action='count', default=0)
 	args = parser.parse_args()
 
 	mod = load_plugin(args.plugin)
@@ -82,7 +84,8 @@ def entrypoint():
 		plugin.serverConf()
 	if args.dest:
 		plugin.ip_range = args.dest
-	print_config(plugin, args.plugin)
+	log.__setup__(args.verbose)
+	print_config(plugin, args)
 	workers.init(plugin)
 	main(plugin)
 
