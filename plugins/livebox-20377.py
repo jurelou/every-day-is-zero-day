@@ -89,7 +89,7 @@ class Plugin(IPlugin):
 		pass
 
 	def exec(self, res):
-		log.info("Executing plugin for ", res.url)
+		log.debug("Executing plugin for ", res.url)
 		page = BeautifulSoup(res.text, 'html.parser')
 		if page:
 			action, body = find_forms(page)
@@ -98,6 +98,6 @@ class Plugin(IPlugin):
 				if res.status_code is 200 and res.url.endswith("/get_getnetworkconf.cgi/cgi-bin/login.exe"):
 					log.info("FOUND VULN: {}".format(res.url))  
 			else:
-				log.info("No login form found from ", res.url)
+				log.debug("No login form found from ", res.url)
 		else:
-			log.info("No DOM found from ", res.url)
+			log.debug("No DOM found from ", res.url)

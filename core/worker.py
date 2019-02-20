@@ -37,13 +37,13 @@ class Worker(threading.Thread):
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
 			if addr is QUIT:
-				log.debug("Thread is stopping")
+				log.debug("Thread stopping by QUIT")
 				return
 			res = self.send_requests(addr)
 			if res:
 				PLUGIN.exec(res)
 			self.q.task_done()
-		log.critical("THREAD STOPPED, PROBABLY AN ERROR")
+		log.critical("Thread stopping by SHUTDOWN_FLAG")
 
 class Queue():
 	def __init__(self):
