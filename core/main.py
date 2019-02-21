@@ -64,7 +64,7 @@ def main(plugin):
 		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
 def load_plugin(module):
-	module_path = 'plugins.' + module
+	module_path = 'core.plugins.' + module
 	if module_path in sys.modules:
 		return sys.modules[module_path]
 	return __import__(module_path, fromlist=[module])

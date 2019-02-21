@@ -21,7 +21,7 @@ import warnings
 
 import paramiko
 import core.logger as log
-from plugins.IPlugin import IPlugin, connection_type
+from .IPlugin import IPlugin, connection_type
 
 old_parse_service_accept = paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT]
 

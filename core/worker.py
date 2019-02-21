@@ -24,7 +24,7 @@ class Worker(threading.Thread):
 			url = 'http://{}:{}{}'.format(addr, PLUGIN.port, PLUGIN.relative_url)
 			log.debug("Sending GET to {}".format(url))
 			res = requests.get(url, allow_redirects=True, \
-				verify=False, timeout=10)
+				verify=False, timeout=PLUGIN.timeout)
 			log.debug("Got Response {} from GET {}".format(res.status_code, addr))
 		except requests.exceptions.SSLError: log.debug('SSLError from {}'.format(addr))
 		except requests.exceptions.ReadTimeout: log.debug('timeout from {}'.format(addr))

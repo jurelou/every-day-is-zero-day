@@ -4,4 +4,4 @@ if [ $# -ne 1 ]
     echo "Give me your plugin name!"
 fi
 
-cp  ./plugins/example.py ./plugins/$1.py
+cp  ./core/plugins/example.py ./core/plugins/$1.py
