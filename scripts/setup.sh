@@ -1,4 +1,6 @@
 #!/bin/sh
-pip3 install requirements.txt
-chmod +x ./main.py
 cd masscan && make -j4
+cd ..
+virtualenv venv
+source venv/bin/activate
+venv/bin/pip install -r requirements.txt

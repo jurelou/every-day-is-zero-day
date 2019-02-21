@@ -4,7 +4,8 @@
 
 On Debian/Ubuntu:
 
-	$ sudo apt-get install git gcc make libpcap-dev python3-pip build-essential libssl-dev libffi-dev python-dev
+	$ sudo apt-get install git gcc make libpcap-dev python3-pip build-essential libssl-dev libffi-dev python-dev python3-bs4
+	$ sudo -H pip3 install virtualenv
 	$ git clone https://github.com/jurelou/every-day-is-zero-day.git --recurse-submodules
 	$ cd every-day-is-zero-day
 	$ ./setup.sh

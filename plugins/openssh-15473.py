@@ -14,11 +14,11 @@ https://github.com/Rhynorater/CVE-2018-15473-Exploit
 """
 
 import warnings
-import cryptography
-from cryptography import utils
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore', cryptography.utils.DeprecatedIn23)
-    import cryptography.hazmat.primitives.constant_time
+
+
+
+
+
 import paramiko
 import core.logger as log
 from plugins.IPlugin import IPlugin, connection_type
