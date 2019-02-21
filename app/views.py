@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from flask import render_template, Blueprint
 hello_blueprint = Blueprint('hello',__name__)
 
