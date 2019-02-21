@@ -51,7 +51,6 @@ class Worker(threading.Thread):
 		log.debug("Starting new thread")
 		while not self.shutdown_flag.is_set():
 			addr = self.q.get()
-			print("n job")
 			if addr is QUIT:
 				log.debug("Thread stopping by QUIT")
 				return
