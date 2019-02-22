@@ -8,6 +8,7 @@ import socket
 import requests
 import threading
 import core.logger as log
+from .plugins.IPlugin import connection_type
 
 QUIT = 0xDEADBEEF
 
@@ -18,49 +19,56 @@ class Worker(threading.Thread):
 		self.shutdown_flag = threading.Event()
 		self.q = queue
 
-	def send_get_requests(self, addr):
+	def http_connection(self, addr, plugin):
 		res = None
 		try:
-			url = 'http://{}:{}{}'.format(addr, PLUGIN.port, PLUGIN.relative_url)
+			url = 'http://{}:{}{}'.format(addr[0], addr[1], plugin.relative_url)
 			log.debug("Sending GET to {}".format(url))
 			res = requests.get(url, allow_redirects=True, \
-				verify=False, timeout=PLUGIN.timeout)
+				verify=False, timeout=plugin.timeout)
 			log.debug("Got Response {} from GET {}".format(res.status_code, addr))
-		except requests.exceptions.SSLError: log.debug('SSLError from {}'.format(addr))
-		except requests.exceptions.ReadTimeout: log.debug('timeout from {}'.format(addr))
-		except Exception as e: log.debug('Error {} -> {}'.format(addr, e))
+		except requests.exceptions.SSLError: log.debug('SSLError from {}:{}'.format(addr[0],addr[1]))
+		except requests.exceptions.ReadTimeout: log.debug('timeout from {}:{}'.format(addr[0],addr[1]))
+		except Exception as e: log.debug('Error {}:{} -> {}'.format(addr[0],addr[1], e))
 		finally:
 			return res
 		return None
 
-	def create_tcp_connection(self, addr):
-		addr = '51.38.179.48'
+	def raw_connection(self, addr):
 		sock = socket.socket()
 		sock.settimeout(1)
 		try:
-			sock.connect((addr, PLUGIN.port))
+			sock.connect((addr[0], addr[1]))
 		except socket.timeout:
-			log.err("Socket timeout from {}:{}".format(addr, PLUGIN.port))
+			log.err("Socket timeout from {}:{}".format(addr[0],addr[1]))
 			return None
 		except socket.error:
-			log.err("Socket connect error {}:{}".format(addr, PLUGIN.port))
+			log.err("Socket connect error {}:{}".format(addr[0],addr[1]))
 			return None
 		return sock
+
+	def connect(self, addr, plugin):
+		if plugin.connection_type is connection_type.WEB:
+			log.debug("Creating websocket for {}:{}".format(addr[0],addr[1]))
+			return self.http_connection(addr, plugin)
+		elif plugin.connection_type is connection_type.RAW:
+			log.debug("Creating TCP socket for {}:{}".format(addr[0],addr[1]))			
+			return self.raw_connection(addr)
+		return None
 
 	def run(self):
 		log.debug("Starting new thread")
 		while not self.shutdown_flag.is_set():
-			addr = self.q.get()
+			addr= self.q.get()
 			if addr is QUIT:
 				log.debug("Thread stopping by QUIT")
 				return
-			conn = None
-			if PLUGIN.connection_type == 1:
-				conn = self.create_tcp_connection(addr)
-			elif PLUGIN.connection_type == 2:
-				conn = self.send_get_requests(addr)
-			if conn:
-				PLUGIN.exec(conn)
+			print("GOT NOW JOB", addr[0], addr[1])
+			for port,_,plugin in PLUGINS:
+				if port == addr[1]:
+					conn = self.connect(addr, plugin)
+					if conn:
+						plugin.exec(conn)
 			self.q.task_done()
 		log.critical("Thread stopping by SHUTDOWN_FLAG")
 
@@ -70,18 +78,20 @@ class Queue():
 		self.q = queue.Queue()
 		self.threads = []
 
-	def init(self, plugin):
-		global PLUGIN
-		PLUGIN = plugin
-		self.max_workers = PLUGIN.max_workers if PLUGIN.max_workers else 5
+	def init(self, plugin, threads):
+		global PLUGINS
+		PLUGINS = plugin
+		self.max_workers = threads
 		for i in range(self.max_workers):
 			t = Worker(self.q)
 			t.start()
 			self.threads.append(t)
 
 	def push(self, data):
-		self.q.put(data)
-
+		res = data.split()
+		try:
+			self.q.put((res[0], int(res[1])))
+		except Exception as e: log.error('Error Q PUT {} -> {}'.format(data))
 	def stop(self):
 		for i in range(self.max_workers):
 			self.q.put(QUIT)

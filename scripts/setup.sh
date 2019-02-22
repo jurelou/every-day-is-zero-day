@@ -1,5 +1,5 @@
 #!/bin/bash
-cd masscan && make -j4
+cd masscan && git checkout master && make -j4
 cd ..
 virtualenv venv
 source venv/bin/activate

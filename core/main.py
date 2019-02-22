@@ -27,19 +27,6 @@ def service_shutdown(signum, frame):
     log.all('Caught signal {}'.format(signum))
     raise ServiceExit
 
-def print_config(plugin, args):
-	log.all("######## Using the following config ########")
-	log.all("Plugin:\t\t{}".format(args.plugin))
-	log.all("Connection type:\t{}".format(plugin.connection_type))
-	log.all("Verbosity:\t{}".format(args.verbose))
-	log.all("Nb of workers:\t{}".format(plugin.max_workers))
-	log.all("Ip range:\t{}:{}".format(plugin.ip_range, plugin.port))
-	log.all("Transmit rate:\t{}".format(plugin.max_rate))
-	log.all("Relative urls:\t{}".format(plugin.relative_url))
-	log.all("Allow redirects:\t{}".format(plugin.allow_redirects))
-	log.all("Verify ssl:\t{}".format(plugin.verify_ssl))
-	log.all("#############################################")
-
 def run_zmap(command):
 	process = Popen(command, stdout=PIPE, shell=True, preexec_fn=os.setsid)
 	while True:
@@ -48,10 +35,12 @@ def run_zmap(command):
 			break
 		yield line
 
-def main(plugin):
+def start_scanner(plugins, max_rate, ip_range):
 	signal.signal(signal.SIGTERM, service_shutdown)
 	signal.signal(signal.SIGINT, service_shutdown)
-	command = "./masscan/bin/masscan {} -p{} --excludefile ./blacklist.txt --max-rate {}".format(plugin.ip_range, plugin.port, plugin.max_rate)
+	ports = ','.join([str(port) for port,_,_ in plugins])
+	command = "./masscan/bin/masscan {} -p{} --excludefile ./blacklist.txt --max-rate {}".format(ip_range, ports, max_rate)
+	log.debug("Running command: {}".format(command))
 	try:
 		for path in run_zmap(command):
 			log.debug("Pushing {}".format(path.decode("utf-8")))
@@ -67,27 +56,52 @@ def load_plugin(module):
 	module_path = 'core.plugins.' + module
 	if module_path in sys.modules:
 		return sys.modules[module_path]
-	return __import__(module_path, fromlist=[module])
+
+	mod =  __import__(module_path, fromlist=[module])
+	plugin = mod.Plugin()
+	plugin.config()
+	return (plugin.port, module, plugin)
+
+def load_plugins():
+	dir = os.path.dirname(os.path.realpath(__file__))
+	plugins_map = []
+	for root, dirs, files in os.walk(dir + "/plugins"):  
+		for filename in files:
+			if filename not in ("example.py", "IPlugin.py") and filename.endswith(".py"):
+				plugins_map.append(load_plugin(filename[:-3]))
+	return plugins_map
 
 def entrypoint():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-s", "--server", help="run in production mode", action="store_true")
 	parser.add_argument("-d", "--dest", type=ip_address, help="Test with a given IP address")
-	parser.add_argument("-p", "--plugin", type=str, help="Use a specific plugin (default: livebox-20377)", default='livebox-20377')
-	parser.add_argument('-v', '--verbose', action='count', default=0)
-	args = parser.parse_args()
+	parser.add_argument("-p", "--plugin", type=str, help="Use a specific plugin")
+	parser.add_argument('-v', '--verbose', action='count', default=0, help="Verbosity levels")
+	parser.add_argument('-j', '--threads', type=int, default=1, help="Number of threads")
+	parser.add_argument('-m', '--max-rate', type=int, default=150, help="maximum packets per seconds")
+	parser.add_argument('-i', '--ip-range', type=str, default='0.0.0.0/0', help="IP range to scan")
 
-	mod = load_plugin(args.plugin)
-	plugin = mod.Plugin()
-	plugin.config()
+	args = parser.parse_args()
+	threads = args.threads
+	max_rate = args.max_rate
+	ip_range = args.ip_range
+	plugins_map = []
+
+	if args.plugin:
+		plugins_map.append(load_plugin(args.plugin))
+	else:
+		plugins_map = load_plugins()
+
 	if args.server:
-		plugin.serverConf()
+		threads = 100
+		max_rate = 1100000
 	if args.dest:
-		plugin.ip_range = args.dest
+		ip_range = args.dest
+
 	log.__setup__(args.verbose)
-	print_config(plugin, args)
-	workers.init(plugin)
-	main(plugin)
+	log.print_config(plugins_map, args)
+	workers.init(plugins_map, threads)
+	start_scanner(plugins_map, max_rate, ip_range)
 
 if __name__ == '__main__':
 	if os.geteuid() != 0:
