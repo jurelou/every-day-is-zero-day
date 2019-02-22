@@ -7,11 +7,10 @@ import queue
 import socket
 import requests
 import threading
-import core.logger as log
+import logging as log
 from .plugins.IPlugin import connection_type
 
 QUIT = 0xDEADBEEF
-
 
 class Worker(threading.Thread): 
 	def __init__(self, queue):
@@ -40,10 +39,10 @@ class Worker(threading.Thread):
 		try:
 			sock.connect((addr[0], addr[1]))
 		except socket.timeout:
-			log.err("Socket timeout from {}:{}".format(addr[0],addr[1]))
+			log.error("Socket timeout from {}:{}".format(addr[0],addr[1]))
 			return None
 		except socket.error:
-			log.err("Socket connect error {}:{}".format(addr[0],addr[1]))
+			log.error("Socket connect error {}:{}".format(addr[0],addr[1]))
 			return None
 		return sock
 
@@ -61,16 +60,15 @@ class Worker(threading.Thread):
 		while not self.shutdown_flag.is_set():
 			addr= self.q.get()
 			if addr is QUIT:
-				log.debug("Thread stopping by QUIT")
+				log.info("Thread stopping by QUIT")
 				return
-			print("GOT NOW JOB", addr[0], addr[1])
 			for port,_,plugin in PLUGINS:
 				if port == addr[1]:
 					conn = self.connect(addr, plugin)
 					if conn:
 						plugin.exec(conn)
 			self.q.task_done()
-		log.critical("Thread stopping by SHUTDOWN_FLAG")
+		log.info("Thread stopping by SHUTDOWN_FLAG")
 
 class Queue():
 	def __init__(self):
@@ -88,6 +86,7 @@ class Queue():
 			self.threads.append(t)
 
 	def push(self, data):
+
 		res = data.split()
 		try:
 			self.q.put((res[0], int(res[1])))

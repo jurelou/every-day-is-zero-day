@@ -2,53 +2,32 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import time
-import inspect
-import datetime
 from .plugins.IPlugin import connection_type
 
-v_level = ""
+import logging
+from logging.handlers import RotatingFileHandler
 
-def __setup__(level):
-	global v_level
-	v_level = level
-	pass;
+FORMAT_FILE = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
+FORMAT = logging.Formatter(fmt='[%(levelname)-8s] %(message)s')
+MAX_FILE_SIZE = 751000000
 
-def all(*kwargs):
-	[sys.stdout.write(' ' + str(i)) for i in kwargs]
-	sys.stdout.write('\n')
-
-def info(*kwargs):
-	sys.stdout.write("[ALL]")
-	frm = inspect.stack()[1]
-	mod = inspect.getmodule(frm[0])
-	sys.stdout.write("[INFO {}]".format(mod.__name__.split(".")[1]))
-	[sys.stdout.write(' ' + str(i)) for i in kwargs]
-	sys.stdout.write('\n')
-
-def debug(*kwargs):
-	if v_level >= 2:
-		sys.stdout.write("[DEBUG]")
-		[sys.stdout.write(' ' + str(i)) for i in kwargs]
-		sys.stdout.write('\n')
-
-def err(*kwargs):
-	if v_level >= 1:
-		frm = inspect.stack()[1]
-		mod = inspect.getmodule(frm[0])
-		sys.stdout.write("[ERROR]")
-		[sys.stdout.write(' ' + str(i)) for i in kwargs]
-		sys.stdout.write('{:>27s}:{}\n'.format(mod.__name__, inspect.stack()[1].function))
-
-def critical(*kwargs):
-	frm = inspect.stack()[1]
-	mod = inspect.getmodule(frm[0])
-	sys.stdout.write("[CRITICAL]")
-	[sys.stdout.write(' ' + str(i)) for i in kwargs]
-	sys.stdout.write('{:>27s}:{}\n'.format(mod.__name__, inspect.stack()[1].function))
+def __setup__(level, file):
+	logging_level = logging.INFO if level == 0 else logging.DEBUG
+	logger = logging.getLogger("")
+	logger.setLevel(logging_level)
+	if file:
+		handler = RotatingFileHandler("0dayz.log", maxBytes=MAX_FILE_SIZE, backupCount=5)
+		handler.setFormatter(FORMAT_FILE)
+		handler.setLevel(logging_level)
+		logger.addHandler(handler)
+	else:
+		h = logging.StreamHandler()
+		h.setLevel(logging_level)
+		h.setFormatter(FORMAT)
+		logger.addHandler(h)
 
 def print_config(plugins, args):
-
 	sys.stdout.write("######## Using the following config ########\n")
 	sys.stdout.write("Verbosity:\t{}\n".format(args.verbose))
 	sys.stdout.write("Threads:\t{}\n".format(args.threads))

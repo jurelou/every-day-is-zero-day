@@ -18,7 +18,7 @@ http://85.56.33.38:8080/index.stm
 
 """
 import requests
-import core.logger as log
+import logging as log
 from .IPlugin import IPlugin, connection_type
 from bs4 import BeautifulSoup
 
@@ -49,34 +49,19 @@ def find_forms(page):
 			for input in form.find_all('input'):
 				if check_if_login_form(input):
 					is_login_form = True
-				# ignore submit/images with no name attributes
 				if input.has_attr('type') and input['type'] in ('submit', 'image') and not input.has_attr('name'):
 					continue
-
-				# single element vname/bvalue fields
 				if input.has_attr('type') and input['type'] in ('text', 'hidden', 'password', 'submit', 'image'):
 					value = ''
 					if input.has_attr('value'):
-						value = input['value']
-					if input['type'] is 'password':
-						print("=>>>>", )						
+						value = input['value']				
 					if input.has_attr('name'):
 						fields[input['name']] = value
 					continue
 			if is_login_form:
 				return action, fields
-
-	except Exception as e: log.critical("Plugin:", e)
+	except Exception as e: log.error("Plugin:", e)
 	return None, None
-
-def post_login(url, body):
-	log.info("ATTEMPT to LOGIN to {} -> {}".format(url, body))
-	res = None
-	try:
-		res = requests.post(url, data = body)
-	except Exception as e: log.err('Error POST to {} -> {}'.format(addr, e))
-	finally:
-		return res
 
 def try_auth(url, password='admin'):
 	print(url[:-23])
@@ -89,7 +74,7 @@ def try_auth(url, password='admin'):
 			return False
 		log.info("SUCCESSFULL login to {} with {}".format(url, body))
 		return True
-	except Exception as e: log.err('Error POST to {} -> {}'.format(url, e))
+	except Exception as e: log.error('Error POST to {} -> {}'.format(url, e))
 	return False
 
 class Plugin(IPlugin):
@@ -113,15 +98,3 @@ class Plugin(IPlugin):
 					log.info("Found SSID and default passwd for {} -> {}:{} ".format(res.url,ssid, password))
 					if try_auth(res.url) or try_auth(res.url, password):
 						log.info("VULNERABLE Device {} !!".format(res.url))
-		'''
-		if page:
-			action, body = find_forms(page)
-			if action and body:
-				res = post_login('{}{}'.format(res.url, action), body)
-				if res.status_code is 200 and res.url.endswith("/get_getnetworkconf.cgi/cgi-bin/login.exe"):
-					log.info("FOUND VULN: {}".format(res.url))  
-			else:
-				log.debug("No login form found from ", res.url)
-		else:
-			log.debug("No DOM found from ", res.url)
-		'''
