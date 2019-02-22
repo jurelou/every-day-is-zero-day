@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from .plugins.IPlugin import connection_type
-
+import requests
 import logging
 from logging.handlers import RotatingFileHandler
+from .plugins.IPlugin import connection_type
 
 FORMAT_FILE = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
@@ -16,6 +16,11 @@ def __setup__(level, file):
 	logging_level = logging.INFO if level == 0 else logging.DEBUG
 	logger = logging.getLogger("")
 	logger.setLevel(logging_level)
+	
+	requests_log = logging.getLogger("requests.packages.urllib3")
+	requests_log.setLevel(logging.DEBUG)
+	requests_log.propagate = True
+	
 	if file:
 		handler = RotatingFileHandler("0dayz.log", maxBytes=MAX_FILE_SIZE, backupCount=5)
 		handler.setFormatter(FORMAT_FILE)

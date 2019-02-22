@@ -25,7 +25,6 @@ class ServiceExit(Exception):
 	pass
 
 def service_shutdown(signum, frame):
-	print("lol")
 	logging.info('Caught signal {}'.format(signum))
 	raise ServiceExit
 

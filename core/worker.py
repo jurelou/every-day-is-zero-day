@@ -22,10 +22,8 @@ class Worker(threading.Thread):
 		res = None
 		try:
 			url = 'http://{}:{}{}'.format(addr[0], addr[1], plugin.relative_url)
-			log.debug("Sending GET to {}".format(url))
 			res = requests.get(url, allow_redirects=True, \
 				verify=False, timeout=plugin.timeout)
-			log.debug("Got Response {} from GET {}".format(res.status_code, addr))
 		except requests.exceptions.SSLError: log.debug('SSLError from {}:{}'.format(addr[0],addr[1]))
 		except requests.exceptions.ReadTimeout: log.debug('timeout from {}:{}'.format(addr[0],addr[1]))
 		except Exception as e: log.debug('Error {}:{} -> {}'.format(addr[0],addr[1], e))
