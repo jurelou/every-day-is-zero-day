@@ -22,7 +22,7 @@ def __setup__(level, file):
 	requests_log.propagate = True
 	
 	if file:
-		handler = RotatingFileHandler("0dayz.log", maxBytes=MAX_FILE_SIZE, backupCount=5)
+		handler = RotatingFileHandler("/var/log/0dayz.log", maxBytes=MAX_FILE_SIZE, backupCount=5)
 		handler.setFormatter(FORMAT_FILE)
 		handler.setLevel(logging_level)
 		logger.addHandler(handler)
