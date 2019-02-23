@@ -8,10 +8,9 @@ from logging.handlers import RotatingFileHandler
 from .plugins.IPlugin import connection_type
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 
-FORMAT_FILE = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
-                              datefmt='%Y-%m-%d %H:%M:%S')
+FORMAT_FILE = logging.Formatter(fmt='level=%(levelname)-8s %(message)s')
 FORMAT = logging.Formatter(fmt='[%(levelname)-8s] %(message)s')
-MAX_FILE_SIZE = 751000000
+MAX_FILE_SIZE = 351000000
 
 def __setup__(level, file):
 	logging_level = logging.INFO if level == 0 else logging.DEBUG
