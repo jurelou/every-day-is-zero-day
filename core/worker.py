@@ -37,10 +37,10 @@ class Worker(threading.Thread):
 		try:
 			sock.connect((addr[0], addr[1]))
 		except socket.timeout:
-			log.error("Socket timeout from {}:{}".format(addr[0],addr[1]))
+			log.debug("Socket timeout from {}:{}".format(addr[0],addr[1]))
 			return None
 		except socket.error:
-			log.error("Socket connect error {}:{}".format(addr[0],addr[1]))
+			log.debug("Socket connect error {}:{}".format(addr[0],addr[1]))
 			return None
 		return sock
 
@@ -58,7 +58,7 @@ class Worker(threading.Thread):
 		while not self.shutdown_flag.is_set():
 			addr= self.q.get()
 			if addr is QUIT:
-				log.info("Thread stopping by QUIT")
+				log.info("error=Thread stopping by QUIT")
 				return
 			for port,_,plugin in PLUGINS:
 				if port == addr[1]:
@@ -66,7 +66,7 @@ class Worker(threading.Thread):
 					if conn:
 						plugin.exec(conn)
 			self.q.task_done()
-		log.info("Thread stopping by SHUTDOWN_FLAG")
+		log.info("error=Thread stopping by SHUTDOWN_FLAG")
 
 class Queue():
 	def __init__(self):
@@ -84,8 +84,8 @@ class Queue():
 			self.threads.append(t)
 
 	def push(self, data):
-
 		res = data.split()
+		log.info("New_job={}:{} queue_size={}".format(res[0],res[1], self.q.qsize()))
 		try:
 			self.q.put((res[0], int(res[1])))
 		except Exception as e: log.error('Error Q PUT {} -> {}'.format(data))
