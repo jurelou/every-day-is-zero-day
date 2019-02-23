@@ -93,8 +93,8 @@ def entrypoint():
 		plugins_map = load_plugins()
 
 	if args.server:
-		threads = 100
-		max_rate = 1100000
+		threads = 200
+		max_rate = 100000
 	if args.dest:
 		ip_range = args.dest
 	log.__setup__(args.verbose, args.file)
