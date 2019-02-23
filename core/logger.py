@@ -28,11 +28,11 @@ def __setup__(level, file):
 		h.setFormatter(FORMAT)
 		logger.addHandler(h)
 
-def print_config(plugins, args):
+def print_config(plugins, args, threads, rate):
 	sys.stdout.write("######## Using the following config ########\n")
 	sys.stdout.write("Verbosity:\t{}\n".format(args.verbose))
-	sys.stdout.write("Threads:\t{}\n".format(args.threads))
-	sys.stdout.write("Transmit rate:\t{}\n".format(args.max_rate))
+	sys.stdout.write("Threads:\t{}\n".format(threads))
+	sys.stdout.write("Transmit rate:\t{}\n".format(rate))
 	sys.stdout.write("IP range:\t{}\n".format(args.ip_range))
 	sys.stdout.write("Plugin(s) enabled:\n")
 	for port,name,plugin in plugins:

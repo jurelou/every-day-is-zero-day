@@ -72,7 +72,7 @@ class Worker(threading.Thread):
                         start = time.time()
                         plugin.exec(conn)
                         end = time.time()
-                        log.info("plugin={} elapsed={}".format(name, end - start))
+                        log.info("plugin={} elapsed={}".format(name, round((end - start) * 1000)))
             self.q.task_done()
         log.info("error=Thread stopping by SHUTDOWN_FLAG")
 
