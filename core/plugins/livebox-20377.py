@@ -64,7 +64,6 @@ def find_forms(page):
 	return None, None
 
 def try_auth(url, password='admin'):
-	print(url[:-23])
 	url = "{}{}".format(url[:-23],'/cgi-bin/login.exe')
 	body = {'user': 'admin', 'pws': password}
 	log.info("ATTEMPT to LOGIN to {} -> {}".format(url, body))

