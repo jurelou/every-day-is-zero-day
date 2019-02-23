@@ -65,11 +65,14 @@ class Worker(threading.Thread):
             if addr is QUIT:
                 log.info("error=Thread stopping by QUIT")
                 return
-            for port, _, plugin in PLUGINS:
+            for port, name, plugin in PLUGINS:
                 if port == addr[1]:
                     conn = self.connect(addr, plugin)
                     if conn:
+                        start = time.time()
                         plugin.exec(conn)
+                        end = time.time()
+                        log.info("plugin={} elapsed={}".format(name, end - start))
             self.q.task_done()
         log.info("error=Thread stopping by SHUTDOWN_FLAG")
 
