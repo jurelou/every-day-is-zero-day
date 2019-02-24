@@ -6,6 +6,7 @@
 |CVE-2017-5521    |
 *-----------------*
 
+https://www.exploit-db.com/exploits/32883
 https://www.trustwave.com/en-us/resources/blogs/spiderlabs-blog/cve-2017-5521-bypassing-authentication-on-netgear-routers/
 
 """
