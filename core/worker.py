@@ -9,6 +9,7 @@ import requests
 import threading
 import logging as log
 from .plugins.IPlugin import connection_type
+from requests.auth import HTTPBasicAuth
 
 QUIT = 0xDEADBEEF
 
@@ -24,9 +25,17 @@ class Worker(threading.Thread):
         res = None
         try:
             url = 'http://{}:{}{}'.format(addr[0],
-                                          addr[1], plugin.relative_url)
-            res = requests.get(url, allow_redirects=True,
-                               verify=False, timeout=plugin.timeout)
+                                              addr[1], plugin.relative_url)
+            if hasattr(plugin, "list_auth"):
+                for username, passwd in plugin.list_auth:
+                    res = requests.get(url, allow_redirects=True,
+                                    verify=False, timeout=plugin.timeout, 
+                                    auth=HTTPBasicAuth(username, passwd))
+                    if res.status_code == 200:
+                        return res                              
+            else:
+                res = requests.get(url, allow_redirects=True,
+                                verify=False, timeout=plugin.timeout)
         except requests.exceptions.SSLError:
             log.debug('SSLError from {}:{}'.format(addr[0], addr[1]))
         except requests.exceptions.ReadTimeout:
