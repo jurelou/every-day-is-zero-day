@@ -18,6 +18,7 @@ class Worker(threading.Thread):
         threading.Thread.__init__(self)
         self.shutdown_flag = threading.Event()
         self.q = queue
+        self.name = "michel"
 
     def http_connection(self, addr, plugin):
         res = None
@@ -72,7 +73,12 @@ class Worker(threading.Thread):
                         start = time.time()
                         plugin.exec(conn)
                         end = time.time()
-                        log.info("plugin={} elapsed={}".format(name, round((end - start) * 1000)))
+                        thread_list = threading.enumerate()
+                        count_threads = 0
+                        for thread in thread_list:
+                            if thread.name == "michel":
+                                count_threads = count_threads + 1
+                        log.info("plugin={} elapsed={} running_threads={}".format(name, round((end - start) * 1000), count_threads))
             self.q.task_done()
         log.info("error=Thread stopping by SHUTDOWN_FLAG")
 
