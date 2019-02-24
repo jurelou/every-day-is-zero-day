@@ -78,7 +78,7 @@ class Worker(threading.Thread):
                         for thread in thread_list:
                             if thread.name == "michel":
                                 count_threads = count_threads + 1
-                        log.info("plugin={} elapsed={} running_threads={}".format(name, round((end - start) * 1000), count_threads))
+                        log.info("plugin={} elapsed={} running_threads={}".format(name, round((end - start) * 1000), count_threads))                        
             self.q.task_done()
         log.info("error=Thread stopping by SHUTDOWN_FLAG")
 

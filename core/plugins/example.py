@@ -24,7 +24,7 @@ This is an example plugin implementation
 
 """
 import logging as log
-from plugins.IPlugin import IPlugin, connection_type
+from .IPlugin import IPlugin, connection_type
 
 class Plugin(IPlugin):
 	def __init__(self):

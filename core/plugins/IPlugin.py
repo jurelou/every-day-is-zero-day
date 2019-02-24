@@ -16,7 +16,7 @@ class IPlugin():
 		# Verify ssl certificate
 		self.verify_ssl = False
 		# Requested url
-		self.relative_url = '/get_getnetworkconf.cgi'
+		self.relative_url = '/'
 		# Port that will be checked
 		self.port = 80
 

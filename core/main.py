@@ -75,7 +75,7 @@ def load_plugins():
     for root, dirs, files in os.walk(dir + "/plugins"):
         for filename in files:
             if filename not in ("example.py",
-                                "IPlugin.py") and filename.endswith(".py"):
+                                "IPlugin.py") and filename.endswith(".py") and not filename.endswith(".disabled"):
                 plugins_map.append(load_plugin(filename[:-3]))
     return plugins_map
 
